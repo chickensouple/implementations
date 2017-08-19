@@ -46,9 +46,14 @@ class ModelBase(object):
         f = self.get_diff_eq()
         self.x = ode_solver_once(f, self.x, u, self.dt)
         self.T += self.dt
+        self.after_step()
         return self.x, self.T
 
     def after_step(self):
+        """
+        Overload this function if you need to do some post processing
+        after the ode solver is called
+        """
         pass
 
 
