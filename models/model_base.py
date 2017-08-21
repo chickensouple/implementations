@@ -30,6 +30,16 @@ class ModelBase(object):
         u = np.clip(u, self.control_limits[0], self.control_limits[1])
         return u
 
+    def diff_eq(self, x, u):
+        """
+        Differential equation to be implemented by subclass
+        
+        Args:
+            x (numpy array): array of length state_dim of state
+            u (numpy array): array of length control_dim of control
+        """
+        raise Exception("Needs to be implemented")
+
 
     def get_diff_eq(self):
         """

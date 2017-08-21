@@ -9,34 +9,36 @@ class Pendulum(ModelBase):
     state is x = [theta, theta_dot]
     where theta is 0 when pointing upwards
     control input is u = [torque]
-    
-    Args:
-        x (numpy array): array of length 2 of current state
-        u (numpy array): array of length 1 of current inputs
-        L (float, optional): length of pendulum
-        m (float, optional): mass of pendulum
-        m_type (str, optional): type of pendulum. 'point' for a point mass at end of pendulum
-        or 'rod' for a mass evenly distributed across a solid rod
-        max_torque (float, optional): maximum torque that can be applied by motor
-    
-    Returns:
-        numpy array: array of length 2 of derivative 
     """
-    def __init__(self, L=1., m=1., m_type='point', mu=0., max_torque=1., **kwargs):
+    def __init__(self, length=1., mass=0.2, m_type='point', mu=0.05, max_torque=1., **kwargs):
+        """
+        Initializes Pendulum
+        
+        Args:
+            length (float, optional): length of pendulum in m
+            mass (float, optional): mass of pendulum in kg
+            m_type (str, optional): type of pendulum. 
+            'point' for a point mass at end of pendulum
+            'rod' for a solid uniform rod
+            mu (float, optional): friction coefficient.
+            friction generates torque according to -angular_vel * mu
+            max_torque (float, optional): maximum torque that can be applied in N*m
+            **kwargs: Description
+        """
         control_limits = [np.array([-max_torque]), np.array([max_torque])]
         super(Pendulum, self).__init__(2, 1, control_limits, **kwargs)
-        self.L = L
-        self.m = m
+        self.length = length
+        self.mass = mass
         self.m_type = m_type
         self.mu = mu
 
         # compute center of mass and moment of inertia
         if m_type == 'point':
-            self.com = L
-            self.inertia = m * L * L
+            self.com = length
+            self.inertia = mass * length * length
         elif m_type == 'rod':
-            self.com = 0.5 * L
-            self.inertia = m * L * L / 3
+            self.com = 0.5 * length
+            self.inertia = mass * length * length / 3
         else:
             raise Exception('Not a valid m_type')
 
@@ -45,7 +47,7 @@ class Pendulum(ModelBase):
         torque = u[0]
 
         grav = 9.81
-        grav_torque = self.m * grav * self.com * np.sin(x[0])
+        grav_torque = self.mass * grav * self.com * np.sin(x[0])
         fric_torque = -x[1] * self.mu
 
         x_dot = np.zeros(x.shape)
@@ -54,9 +56,6 @@ class Pendulum(ModelBase):
         return x_dot
 
     def after_step(self):
-        energy = 0.5 * self.inertia * self.x[1] * self.x[1] + \
-            self.m * 9.81 * np.cos(self.x[0])
-        print "energy: ", energy
         # wrap angle to [-pi, pi)
         while self.x[0] < -np.pi:
             self.x[0] += 2 * np.pi
@@ -77,6 +76,15 @@ if __name__ == '__main__':
 
     # plt.scatter(states[0, :], states[1, :])
     # plt.show()
+
+
+
+
+
+    
+
+
+
 
     import matplotlib
     matplotlib.use('TkAgg')

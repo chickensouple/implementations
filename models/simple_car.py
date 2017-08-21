@@ -13,21 +13,20 @@ class SimpleCar(ModelBase):
     
     control input is u = [a, phi]
     where a is acceleration of the car and phi is turning angle
-    
-    Args:
-        x (numpy array): array of length 4 of current state
-        u (numpy array): array of length 2 of current inputs
-        L (float, optional): front wheel to back wheel distance (default: 1)
-        max_accel (float, optional): maximum acceleration of car
-        max_turn (float, optional): maximum turn angle of car
-    
-    Returns:
-        numpy array: array of length 4 of derivative 
     """
-    def __init__(self, L=1., max_accel=1., max_turn=np.pi/3, **kwargs):
+    def __init__(self, length=1., max_accel=1., max_turn=np.pi/3, **kwargs):
+        """
+        Initializes a simple car
+        
+        Args:
+            length (float, optional): front wheel to back wheel distance (default: 1)
+            max_accel (float, optional): maximum acceleration of car in m/s/s
+            max_turn (TYPE, optional): maximum turn angle of car in rad
+            **kwargs: Description
+        """
         control_limits = [np.array([-max_accel, -max_turn]), np.array([max_accel, max_turn])]
         super(SimpleCar, self).__init__(4, 2, control_limits, **kwargs)
-        self.L = L
+        self.length = length
 
     def diff_eq(self, x, u):
         u = self._check_and_clip(x, u)
@@ -39,7 +38,7 @@ class SimpleCar(ModelBase):
         x_dot[0] = x[2] * math.cos(x[3])
         x_dot[1] = x[2] * math.sin(x[3])
         x_dot[2] = accel
-        x_dot[3] = -x[2] / self.L * math.tan(u[1])
+        x_dot[3] = -x[2] / self.length * math.tan(u[1])
         return x_dot
 
 

@@ -9,17 +9,16 @@ class DubinsCar(ModelBase):
     where (x, y) is a 2D coordinate of the car
     and theta is the heading of the car (where 0 is pointed in positive x direction)
     control input is [angular_velocity]
-
-    Args:
-        x (numpy array): array of length 3 of state
-        u (numpy array): array of length 1 of control
-        v (float, optional): forward velocity of car
-        max_w (float, optional): maximum angular velocity of car
-    
-    Returns:
-        numpy array: derivative of state
     """
     def __init__(self, v=1., max_w=1., **kwargs):
+        """
+        Initializes DubinsCar
+        
+        Args:
+            v (float, optional): forward velocity of car in m/s
+            max_w (float, optional): maximum angular velocity of car in rad/s
+            **kwargs: Description
+        """
         control_limits = [np.array([-max_w]), np.array([max_w])]
         super(DubinsCar, self).__init__(3, 1, control_limits, **kwargs)
         self.v = v

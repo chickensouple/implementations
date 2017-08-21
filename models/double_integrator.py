@@ -4,22 +4,20 @@ from model_base import ModelBase
 
 class DoubleIntegrator(ModelBase):
     """
-    Models a simple double integrator 
-
+    Models a simple double integrator
+    
     state for system is [x, x_dot]
     control input is [acceleration]
-
-    Args:
-        x (numpy array): array of length 2 of state
-        u (numpy array): array of length 1 of control
-        v (float, optional): forward velocity of car
-        max_w (float, optional): maximum angular velocity of car
-    
-    Returns:
-        numpy array: derivative of state
     """
-    def __init__(self, max_a=1., **kwargs):
-        control_limits = [np.array([-max_a]), np.array([max_a])]
+    def __init__(self, max_acc=1., **kwargs):
+        """
+        Initializes a Double Integrator
+        
+        Args:
+            max_acc (float, optional): maximum acceleration in m/s/s
+            **kwargs: Description
+        """
+        control_limits = [np.array([-max_acc]), np.array([max_acc])]
         super(DoubleIntegrator, self).__init__(2, 1, control_limits, **kwargs)
 
     def diff_eq(self, x, u):
