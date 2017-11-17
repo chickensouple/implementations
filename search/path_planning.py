@@ -1,14 +1,8 @@
 import queue
 from heuristics import heuristic_none
-
-import numpy as np
-import matplotlib.pyplot as plt
-
-
 import heapq
 
-
-class ClosedList(object):
+class OpenList(object):
     def __init__(self):
         self.heap = []
 
@@ -48,7 +42,7 @@ class ClosedList(object):
 
 def astar(graph, start, goal, heuristic):
     # requires admissible heuristic
-    frontier = ClosedList()
+    frontier = OpenList()
     explored = set()
 
     predecessors = dict()
@@ -56,11 +50,9 @@ def astar(graph, start, goal, heuristic):
     costs = dict()
     costs[start] = 0
 
-    # frontier.put((0 + heuristic(start), start))
     frontier.put(start, 0 + heuristic(start))
     path_found = False
     while not frontier.empty():
-        # curr_cost, node = frontier.get()
         node = frontier.get()
         
         if node in explored:
@@ -106,11 +98,8 @@ def astar(graph, start, goal, heuristic):
     return path_found, path, costs[goal]
 
 
-
 def dijkstra(graph, start, goal):
     return astar(graph, start, goal, heuristic_none)
-
-
 
 
 if __name__ == '__main__':
