@@ -5,7 +5,6 @@ import heapq
 class OpenList(object):
     def __init__(self):
         self.heap = []
-
         self.heap_dict = dict()
 
     def put(self, item, priority):
@@ -41,44 +40,54 @@ class OpenList(object):
 
 
 def astar(graph, start, goal, heuristic):
-    # requires admissible heuristic
+    # add start node to open list
     frontier = OpenList()
+    frontier.put(start, 0 + heuristic(start))
+    
+    # set of nodes that have already been explored
     explored = set()
 
+    # dict mapping children to parent
     predecessors = dict()
 
+    # dict mapping nodes to cost from start
     costs = dict()
     costs[start] = 0
 
-    frontier.put(start, 0 + heuristic(start))
+    
     path_found = False
     while not frontier.empty():
         node = frontier.get()
-        
-        if node in explored:
-            continue
 
+        # break if goal is found
         if node == goal:
             path_found = True
             break
 
         explored.add(node)
 
+        # expand neighbors
         for neighbor in graph.get_neighbors(node):
+            # if we have already explored neighbor dont add to open list
             if neighbor in explored:
                 continue
 
             cost = costs[node] + graph.get_cost(node, neighbor)
             priority = cost + heuristic(neighbor)
 
+            # if frontier already has neighbor,
+            # and priority is lower than what is already there
+            # update the priority, otherwise, skip
             if frontier.contains(neighbor):
                 if priority < frontier.get_priority(neighbor):
                     frontier.decrease_key(neighbor, priority)
                 else:
                     continue
             else:
+                # if frontier doesn't have neighbor, add to frontier
                 frontier.put(neighbor, priority)
 
+            # update cost from start and predecessor
             costs[neighbor] = cost
             predecessors[neighbor] = node
 

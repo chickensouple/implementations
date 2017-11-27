@@ -1,12 +1,13 @@
 import numpy as np
 import copy
 
-def ode_solver(f, x0, t0, dt, stype='runge_kutta4'):
+def ode_solver(f, controller, x0, t0, dt, stype='runge_kutta4'):
     """
-    numerically computes ode solution
+    numerically computes ode solution to a time invariant system
     
     Args:
-        f (function): ode to solve, x_dot = f(t, x)
+        f (function): ode to solve, x_dot = f(x, u)
+        controller (function): controller, u = g(x, t)
         x0 (numpy): a state_size by 1 numpy array for initial state
         t0 (array): initial time
         dt (TYPE): a length N array of timesteps to integrate over
@@ -22,6 +23,8 @@ def ode_solver(f, x0, t0, dt, stype='runge_kutta4'):
     elif stype == 'runge_kutta4':
         func = runge_kutta4
 
+    f_new = lambda t, x: f(x, controller(x, t))
+
     n = len(dt)
 
     x = np.zeros((len(x0), n+1))
@@ -30,7 +33,7 @@ def ode_solver(f, x0, t0, dt, stype='runge_kutta4'):
     t[0] = t0
     for i in range(1, n+1):
         x_prev = np.array([x[:, i-1]]).T
-        x[:, i] = func(f, x_prev, t[i-1], dt[i-1]).squeeze()
+        x[:, i] = func(f_new, x_prev, t[i-1], dt[i-1]).squeeze()
         t[i] = t[i-1] + dt[i-1]
     return x, t
 
@@ -77,21 +80,6 @@ def runge_kutta4(f, x, t, dt):
     return x_new
 
 
-def control_wrapper(f, u):
-    """
-    Generates a wrapper function
-    that takes in (t, x) as arguments
-    to be used in an ode solver
-    Args:
-        f (function): function that describes dynamics of system
-        x_dot = f(x, u)
-        first argument must be state, second is control input
-        u (function): function that takes in state, time, and outputs 
-        a control output, u(x, t)
-    """
-    f_new = lambda t, x: f(x, u(x, t))
-    return f_new
-
 def step_controller(u, dt):
     """
     Generates function u(t) that returns the ith elemnt of u
@@ -106,6 +94,7 @@ def step_controller(u, dt):
         if t < 0 or t >= n * dt:
             return 0.
         idx = int(np.floor(t / dt))
+
         return u[idx]
     return func
 
@@ -116,26 +105,26 @@ def constant_controller(u):
     return lambda x, t: u
 
 
-# if __name__ == '__main__':
-#     from dubins_car import DubinsCar
-#     import matplotlib.pyplot as plt
-#     car = DubinsCar(1., 1.)
+if __name__ == '__main__':
+    from dubins_car import DubinsCar
+    import matplotlib.pyplot as plt
+    car = DubinsCar(1., 1.)
 
-#     dt = 0.1
-#     controls = np.array([-0.2, -0.2, -0., 0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
-#     control_func = step_controller(controls, dt)
-#     ode_func = control_wrapper(DubinsCar.diff_eq, control_func)
+    dt = 0.1
+    controls = np.array([[-0.2, -0.2, -0., 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]]).T
+    control_func = step_controller(controls, dt)
 
-#     dts = np.ones(len(controls)) * dt
-#     x1, t1 = ode_solver(ode_func, car.x, 0, dts)
-#     x2, t2 = ode_solver(ode_func, car.x, 0, dts, stype='euler')
+    dts = np.ones(len(controls)) * dt
+    x1, t1 = ode_solver(car.get_diff_eq(), control_func, car.x, 0, dts)
+    x2, t2 = ode_solver(car.get_diff_eq(), control_func, car.x, 0, dts, stype='euler')
 
-#     plt.scatter(x1[0, :], x1[1, :], label='runge_kutta')
-#     plt.scatter(x2[0, :], x2[1, :], label='euler')
+    plt.scatter(x1[0, :], x1[1, :], label='runge_kutta')
+    plt.scatter(x2[0, :], x2[1, :], label='euler')
 
-#     plt.xlabel('x')
-#     plt.ylabel('y')
-#     plt.legend()
+    plt.xlabel('x')
+    plt.ylabel('y')
+    plt.legend()
 
-#     plt.show()
-#     
+    plt.show()
+
+

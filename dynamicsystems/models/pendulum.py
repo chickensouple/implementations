@@ -31,6 +31,7 @@ class Pendulum(ModelBase):
         self.mass = mass
         self.m_type = m_type
         self.mu = mu
+        self.x = np.array([[math.pi, 0]]).T
 
         # compute center of mass and moment of inertia
         if m_type == 'point':
@@ -63,6 +64,13 @@ class Pendulum(ModelBase):
             self.x[0] -= 2 * np.pi
 
 
+    def get_energy(self):
+        kinetic = 0.5 * self.inertia * self.x[1] * self.x[1]
+        potential = self.mass * 9.81 * self.com * (math.cos(self.x[0]) - 1)
+        total = kinetic + potential
+        return total
+
+
 if __name__ == '__main__':
     # import matplotlib.pyplot as plt
 
@@ -76,12 +84,6 @@ if __name__ == '__main__':
 
     # plt.scatter(states[0, :], states[1, :])
     # plt.show()
-
-
-
-
-
-    
 
 
 

@@ -1,8 +1,8 @@
 import numpy as np
 from model_base import ModelBase
+from linear_system import LinearSystem
 
-
-class DoubleIntegrator(ModelBase):
+class DoubleIntegrator(LinearSystem):
     """
     Models a simple double integrator
     
@@ -17,26 +17,28 @@ class DoubleIntegrator(ModelBase):
             max_acc (float, optional): maximum acceleration in m/s/s
             **kwargs: Description
         """
+        A = np.array([[0., 1.], [0., 0.]])
+        B = np.array([[0., 1.]]).T
         control_limits = [np.array([-max_acc]), np.array([max_acc])]
-        super(DoubleIntegrator, self).__init__(2, 1, control_limits, **kwargs)
-
-    def diff_eq(self, x, u):
-        u = self._check_and_clip(x, u)
-        accel = u[0]
-
-        x_dot = np.zeros(x.shape)
-        x_dot[0] = x[1]
-        x_dot[1] = accel
-        return x_dot
+        super(DoubleIntegrator, self).__init__(A, B, control_limits, **kwargs)
 
 
 if __name__ == '__main__':
+    # env = DoubleIntegrator()
+    # x0 = np.zeros((2, 1))
+    # u0 = np.zeros((1, 1))
+    # base, A, B = env.get_linearization(x0, u0)
+
+    # print "base:", base
+    # print "A:", A
+    # print "B:", B
     import matplotlib.pyplot as plt
 
-    env = DoubleIntegrator()
-    controls = np.array([[-0.2, -0.2, -0.2, -1.2, 0, 5., 2.]]).T
+    env = DoubleIntegrator(dt = 0.05)
+    controls = [-0.2, -0.2, -0.2, -0.2, -1.2, -1.2, 0, 5., 2., 2., 2.]
     states = np.zeros((env.state_dim, len(controls)))
     for idx, control in enumerate(controls):
+        control = np.array([[control]])
         state, _ = env.step(control)
         states[:, idx] = state.squeeze()
 
