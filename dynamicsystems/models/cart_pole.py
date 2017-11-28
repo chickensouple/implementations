@@ -5,10 +5,9 @@ class CartPole(ModelBase):
     """
     Models a typical cartpole system with a pointmass pendulum
 
-    state is [x, y, theta]
-    where (x, y) is a 2D coordinate of the car
-    and theta is the heading of the car (where 0 is pointed in positive x direction)
-    control input is [angular_velocity]
+    state is [x, theta, x_dot, theta_dot]
+    where x is location on track
+    theta is angle of pendulum (0 is pointing downwards)
     """
     def __init__(self, mass_cart=1., length=1., mass_pendulum=0.2, max_force=1., **kwargs):
         """
@@ -22,7 +21,7 @@ class CartPole(ModelBase):
             **kwargs: Description
         """
         control_limits = [np.array([-max_force]), np.array([max_force])]
-        super(CartPole, self).__init__(3, 1, control_limits, **kwargs)
+        super(CartPole, self).__init__(4, 1, control_limits, **kwargs)
         self.mass_cart = mass_cart
         self.length = length
         self.mass_pendulum = mass_pendulum
@@ -30,7 +29,6 @@ class CartPole(ModelBase):
     def diff_eq(self, x, u):
         u = self._check_and_clip(x, u)
         force = u[0]
-
 
         x_dot = np.zeros((4, 1))
         x_dot[0] = x[2]
@@ -42,8 +40,11 @@ class CartPole(ModelBase):
         den = 1. / (self.mass_cart + self.mass_pendulum * np.square(sin_theta))
         x_dot[2] = force + self.mass_pendulum * sin_theta * (self.length * np.square(x[3]) + grav * cos_theta)
         x_dot[2] *= den
-        # x_dot[3] = 
-
+        x_dot[3] = -(force*cos_theta + \
+            self.mass_pendulum*self.length*np.square(x[3])*cos_theta*sin_theta + \
+            (self.mass_cart+self.mass_pendulum)*grav*sin_theta)
+        x_dot[3] *= den
+        x_dot[3] /= self.length
         return x_dot
 
 if __name__ == '__main__':

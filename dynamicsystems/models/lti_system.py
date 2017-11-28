@@ -1,9 +1,9 @@
 import numpy as np
 from model_base import ModelBase
 
-class LinearSystem(ModelBase):
+class LTISystem(ModelBase):
     """
-    Generic Linear System
+    Generic Linear Time Invariant System
     """
     def __init__(self, A, B, control_limits=None, **kwargs):
         if A.shape[0] != B.shape[0]:
@@ -15,7 +15,7 @@ class LinearSystem(ModelBase):
             min_limit = np.ones(control_dim) * -np.Inf
             max_limit = np.ones(control_dim) * np.Inf
             control_limits = [min_limit, max_limit]
-        super(LinearSystem, self).__init__(state_dim, control_dim, control_limits, **kwargs)
+        super(LTISystem, self).__init__(state_dim, control_dim, control_limits, **kwargs)
 
         self.A = A
         self.B = B
@@ -30,11 +30,16 @@ class LinearSystem(ModelBase):
         f0 = self.diff_eq(x0, u0)
         return f0, self.A, self.B
 
+    def discretize(self, dt):
+        A_disc = (self.A * dt + np.eye(self.state_dim))
+        B_disc = (self.B * dt)
+        return A_disc, B_disc
+
 
 if __name__ == '__main__':
     A = np.array([[1, 2., 0], [0, 1., 0.5], [0, 1., 0]])
     B = np.array([[0, 1, 2.]]).T
-    env = LinearSystem(A, B)
+    env = LTISystem(A, B)
     x0 = np.zeros((3, 1))
     u0 = np.zeros((1, 1))
     base, A, B = env.get_linearization(x0, u0)

@@ -50,9 +50,9 @@ def energy_test():
     import matplotlib.pyplot as plt
 
     dt = 0.05
-    controller = controllers.PendulumEnergySwingup(0.5, 0)
+    controller = controllers.PendulumEnergySwingup(0., 2., 0.001, 0.)
     pendulum = models.Pendulum(dt=dt)
-    pendulum.set_state(np.array([[math.pi, 0.1]]).T)
+    pendulum.set_state(np.array([[math.pi, 0.]]).T)
 
     N = 500
     states = np.zeros((2, N))
@@ -64,7 +64,7 @@ def energy_test():
         energy = pendulum.get_energy()
         energies[i] = energy
 
-        u = controller.get_action(state, energy)
+        u = controller.get_action(state, energy, dt)
         u = np.array([u])
 
         controls[i] = u
@@ -85,18 +85,19 @@ def energy_test():
 def hybrid_test():
     import matplotlib.pyplot as plt
 
-    dt = 0.05
-    pid = controllers.PID(3., 0., -1., 10.)
-    energy_swingup = controllers.PendulumEnergySwingup(0.5, 0)
+    dt = 0.01
+    pid = controllers.PID(2., 0., -1.)
+    energy_swingup = controllers.PendulumEnergySwingup(0., 2., 0.0001, 0.)
     controller = controllers.PendulumHybrid(pid, energy_swingup)
     pendulum = models.Pendulum(dt=dt)
-    pendulum.set_state(np.array([[math.pi, 0.1]]).T)
+    pendulum.set_state(np.array([[math.pi, 0.]]).T)
 
-    N = 500
+    N = 800
     target = np.array([0.]).T
     states = np.zeros((2, N))
     controls = np.zeros(N)
     energies = np.zeros(N)
+    control_types = np.zeros(N)
     for i in range(N):
         state = pendulum.get_state()
         states[:, i] = state.squeeze()
@@ -106,10 +107,11 @@ def hybrid_test():
         energy = pendulum.get_energy()
         energies[i] = energy
 
-        u = controller.get_action(delta_state, dt, state[1], state, energy)
+        u, control_type = controller.get_action(delta_state, dt, state[1], state, energy)
         u = np.array([u])
 
         controls[i] = u
+        control_types[i] = control_type
 
         pendulum.step(u)
 
@@ -120,14 +122,95 @@ def hybrid_test():
     plt.plot(t, states[1, :], label='theta_dot')
     plt.plot(t, controls, label='control')
     plt.plot(t, energies, label='energy')
+    plt.plot(t, control_types, label='controller')
     plt.legend()
     plt.show()
 
+
+def lqr_batch_test():
+    import matplotlib.pyplot as plt
+    dt = 0.05
+    N = 200
+    sys = models.DoubleIntegrator(dt=dt)
+
+    x0 = np.array([[2., 2.]]).T
+    A, B = sys.discretize(dt)
+    Q = np.eye(2) * 4
+    P = Q
+    R = np.eye(1) * 1
+
+    sys.set_state(x0)
+
+    controller = controllers.LQRBatch(A, B, Q, P, R, 30)
+
+    states = np.zeros((2, N-1))
+    controls = np.zeros(N-1)
+    for i in range(N-1):
+        state = sys.get_state()
+        states[:, i] = state.squeeze()
+
+        u, cost = controller.solve(state)
+
+        control = u[0, 0]
+        controls[i] = control
+
+        sys.step(np.array([[control]]))
+
+    t = np.ones(N-1) * dt
+    t = np.cumsum(t)
+
+    plt.plot(t, states[0, :], label='x')
+    plt.plot(t, states[1, :], label='x_dot')
+    plt.plot(t, controls, label='control')
+
+    plt.legend()
+    plt.show()
+
+
+def lqr_test():
+    import matplotlib.pyplot as plt
+    dt = 0.05
+    N = 200
+    sys = models.DoubleIntegrator(dt=dt)
+
+    x0 = np.array([[2., 2.]]).T
+    A, B = sys.discretize(dt)
+    Q = np.eye(2) * 4
+    P = Q
+    R = np.eye(1) * 1
+
+    sys.set_state(x0)
+
+    controller = controllers.LQR(A, B, Q, P, R, 100)
+
+    states = np.zeros((2, N-1))
+    controls = np.zeros(N-1)
+    for i in range(N-1):
+        state = sys.get_state()
+        states[:, i] = state.squeeze()
+
+        u = controller.get_action(state)
+
+        control = u[0, 0]
+        controls[i] = control
+
+        sys.step(np.array([[control]]))
+
+    t = np.ones(N-1) * dt
+    t = np.cumsum(t)
+
+    plt.plot(t, states[0, :], label='x')
+    plt.plot(t, states[1, :], label='x_dot')
+    plt.plot(t, controls, label='control')
+
+    plt.legend()
+    plt.show()
 
 
 if __name__ == '__main__':
     # pid_test()
     # energy_test()
     hybrid_test()
-
+    # lqr_batch_test()
+    # lqr_test()
 

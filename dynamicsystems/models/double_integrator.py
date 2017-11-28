@@ -1,8 +1,8 @@
 import numpy as np
 from model_base import ModelBase
-from linear_system import LinearSystem
+from lti_system import LTISystem
 
-class DoubleIntegrator(LinearSystem):
+class DoubleIntegrator(LTISystem):
     """
     Models a simple double integrator
     
@@ -24,25 +24,31 @@ class DoubleIntegrator(LinearSystem):
 
 
 if __name__ == '__main__':
-    # env = DoubleIntegrator()
-    # x0 = np.zeros((2, 1))
-    # u0 = np.zeros((1, 1))
-    # base, A, B = env.get_linearization(x0, u0)
+    env = DoubleIntegrator()
+    x0 = np.zeros((2, 1))
+    u0 = np.zeros((1, 1))
+    base, A, B = env.get_linearization(x0, u0)
 
-    # print "base:", base
-    # print "A:", A
-    # print "B:", B
-    import matplotlib.pyplot as plt
+    print "base:", base
+    print "A:", A
+    print "B:", B
 
-    env = DoubleIntegrator(dt = 0.05)
-    controls = [-0.2, -0.2, -0.2, -0.2, -1.2, -1.2, 0, 5., 2., 2., 2.]
-    states = np.zeros((env.state_dim, len(controls)))
-    for idx, control in enumerate(controls):
-        control = np.array([[control]])
-        state, _ = env.step(control)
-        states[:, idx] = state.squeeze()
+    A, B = env.discretize(0.1)
+    print "A:", A
+    print "B:", B
 
-    plt.plot(states[0, :])
-    plt.show()
+    
+    # import matplotlib.pyplot as plt
+
+    # env = DoubleIntegrator(dt = 0.05)
+    # controls = [-0.2, -0.2, -0.2, -0.2, -1.2, -1.2, 0, 5., 2., 2., 2.]
+    # states = np.zeros((env.state_dim, len(controls)))
+    # for idx, control in enumerate(controls):
+    #     control = np.array([[control]])
+    #     state, _ = env.step(control)
+    #     states[:, idx] = state.squeeze()
+
+    # plt.plot(states[0, :])
+    # plt.show()
 
 

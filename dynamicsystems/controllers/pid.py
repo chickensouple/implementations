@@ -2,7 +2,7 @@ import numpy as np
 
 
 class PID(object):
-    def __init__(self, kp, ki, kd, int_limit):
+    def __init__(self, kp, ki, kd, int_limit=np.Inf):
         self.kp = kp
         self.ki = ki
         self.kd = kd
@@ -21,6 +21,7 @@ class PID(object):
         control += deriv * self.kd
         self.prev_delta_state = delta_state
 
+        self.int += delta_state
         if self.int > self.int_limit:
             self.int = self.int_limit
         if self.int < -self.int_limit:
@@ -32,7 +33,6 @@ class PID(object):
 
 
 # TODO:
-# energy pendulum swingup
 # LQR
 # DDP
 # ILQG
