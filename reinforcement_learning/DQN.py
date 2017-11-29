@@ -1,10 +1,8 @@
 import numpy as np
 from functools import partial
 import tensorflow as tf
-from tensorflow_utils import fully_connected
 from replay_buffer import ReplayBuffer
 import pdb
-
 
 class DQN(object):
     def __init__(self, state_dim, num_actions, eps_anneal, gamma=0.99, update_freq=100, sess=None):
@@ -35,14 +33,20 @@ class DQN(object):
         self.replay_buffer.clear()
         self.eps_anneal.reset()
 
-    def __build_q_func(self, input_var, name, reuse=False, trainable=True):
+    def __build_q_func(self, input_var, name, reuse=False):
         with tf.variable_scope(name, reuse=reuse) as scope:
-            with tf.variable_scope("layer1"):
-                layer1 = fully_connected(input_var, 32, activation=tf.nn.relu, trainable=trainable)
-            with tf.variable_scope("layer2"):
-                layer2 = fully_connected(layer1, 16, activation=tf.nn.relu, trainable=trainable)
-            with tf.variable_scope("q_vals"):
-                q_vals = fully_connected(layer2, self.num_actions, trainable=trainable)
+            layer1 = tf.contrib.layers.fully_connected(input_var, 
+                32, 
+                activation_fn=tf.nn.relu, 
+                scope='layer1')
+            layer2 = tf.contrib.layers.fully_connected(layer1, 
+                16, 
+                activation_fn=tf.nn.relu, 
+                scope='layer2')
+            q_vals = tf.contrib.layers.fully_connected(layer2, 
+                self.num_actions, 
+                activation_fn=None, 
+                scope='q_vals')
         return q_vals
 
     def __build_model(self):

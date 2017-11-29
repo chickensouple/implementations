@@ -3,7 +3,6 @@ import controllers
 import models
 import math
 
-
 def angle_diff(angle1, angle2):
     diff = angle1 - angle2
     while diff > np.pi:
@@ -15,13 +14,13 @@ def angle_diff(angle1, angle2):
 def pid_test():
     import matplotlib.pyplot as plt
 
-    dt = 0.05
-    pid = controllers.PID(3., 0., -1., 10.)
+    dt = 0.01
+    pid = controllers.PID(5., 0.02, -1., 10.)
     pendulum = models.Pendulum(dt=dt)
     pendulum.set_state(np.array([[0.1, 0.1]]).T)
 
-    target = np.array([0.]).T
-    N = 100
+    target = np.array([0.2]).T
+    N = 500
     states = np.zeros((2, N))
     controls = np.zeros(N)
     for i in range(N):
@@ -44,6 +43,44 @@ def pid_test():
     plt.plot(t, controls, label='control')
     plt.legend()
     plt.show()
+
+
+def pid_rocket_test():
+    import matplotlib.pyplot as plt
+
+    dt = 0.01
+    pid = controllers.PID(-3., -0.01, 5., 100.)
+    pendulum = models.Rocket(dt=dt)
+
+    target = np.array([100]).T
+    N = 4000
+    states = np.zeros((3, N))
+    controls = np.zeros(N)
+    for i in range(N):
+        state = pendulum.get_state()
+        states[:, i] = state.squeeze()
+
+        delta_state = target - state[0]
+
+        u = pid.get_action(delta_state, dt, deriv=state[1])
+        u = np.array([u])
+        controls[i] = u
+        pendulum.step(u)
+
+
+    t = np.ones(N) * dt
+    t = np.cumsum(t)
+
+    plt.plot(t, states[0, :], label='height')
+    plt.plot(t, states[1, :], label='velocity')
+    plt.plot(t, states[2, :] * 100 / states[2, 0], label='fuel')
+    plt.plot(t, controls, label='control')
+
+    plt.legend()
+    plt.show()
+
+
+
 
 
 def energy_test():
@@ -206,11 +243,56 @@ def lqr_test():
     plt.legend()
     plt.show()
 
+def lqr_test_nonzero():
+    import matplotlib.pyplot as plt
+    dt = 0.05
+    N = 400
+    sys = models.DoubleIntegrator(dt=dt)
+
+    x0 = np.array([[2., 2.]]).T
+    A, B = sys.discretize(dt)
+    Q = np.eye(2) * 4
+    P = Q
+    R = np.eye(1) * 1
+
+    sys.set_state(x0)
+    controller = controllers.LQR(A, B, Q, P, R, 100)
+
+    target_state = np.array([[-2, 0]]).T
+    target_control = np.array([[0]])
+
+
+    states = np.zeros((2, N-1))
+    controls = np.zeros(N-1)
+    for i in range(N-1):
+        state = sys.get_state()
+        states[:, i] = state.squeeze()
+
+        delta_state = state - target_state
+
+        u = controller.get_action(delta_state)
+
+        control = u[0, 0]
+        controls[i] = control
+
+        sys.step(np.array([[control]]) - target_control)
+
+    t = np.ones(N-1) * dt
+    t = np.cumsum(t)
+
+    plt.plot(t, states[0, :], label='x')
+    plt.plot(t, states[1, :], label='x_dot')
+    plt.plot(t, controls, label='control')
+
+    plt.legend()
+    plt.show()
+
 
 if __name__ == '__main__':
     # pid_test()
+    pid_rocket_test()
     # energy_test()
-    hybrid_test()
+    # hybrid_test()
     # lqr_batch_test()
     # lqr_test()
-
+    # lqr_test_nonzero()

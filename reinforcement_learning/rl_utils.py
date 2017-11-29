@@ -2,6 +2,8 @@
 Utilities for reinforcement learning algorithms
 """
 import time
+import numpy as np
+import scipy.signal
 
 def rollout(env, policy, get_state, max_iter=10000, render=False):
     """
@@ -31,12 +33,26 @@ def rollout(env, policy, get_state, max_iter=10000, render=False):
         if (render):
             env.render()
             time.sleep(0.01)
+
         [obs, reward, done, info] = env.step(action)
+        # [obs, reward, done, info] = env.step(np.array([action]))
         rewards.append(reward)
 
         if done:
             break
     return [states, actions, rewards]
+
+def single_test(env, method, get_state, num_episodes):
+    for i in range(num_episodes):
+        total_reward = method.update(env, get_state)
+        print("Iteration " + str(i) + " reward: " + str(total_reward))
+        if i % 100 == 0:
+            [_, _, rewards] = rollout(env, method.curr_policy(), get_state, render=True)
+            total_reward = np.sum(np.array(rewards))
+            print("Test reward: " + str(total_reward))
+
+    policy = method.curr_policy()
+    rollout(env, policy, get_state, render=True)
 
 class LinearAnnealing(object):
     def __init__(self, start_eps, end_eps, num_steps):

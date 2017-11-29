@@ -1,6 +1,5 @@
 import numpy as np
 
-
 class PID(object):
     def __init__(self, kp, ki, kd, int_limit=np.Inf):
         self.kp = kp
@@ -30,10 +29,4 @@ class PID(object):
         control += self.int * self.ki
 
         return control
-
-
-# TODO:
-# LQR
-# DDP
-# ILQG
 

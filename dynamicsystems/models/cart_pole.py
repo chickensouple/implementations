@@ -50,7 +50,7 @@ class CartPole(ModelBase):
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
 
-    env = DubinsCar()
+    env = CartPole()
     controls = np.array([[-0.2, -0.2, -0.2, 0, 0, 0.4, 0.4]]).T
     states = np.zeros((env.state_dim, len(controls)))
     for idx, control in enumerate(controls):

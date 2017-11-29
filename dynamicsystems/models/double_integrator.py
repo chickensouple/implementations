@@ -22,7 +22,6 @@ class DoubleIntegrator(LTISystem):
         control_limits = [np.array([-max_acc]), np.array([max_acc])]
         super(DoubleIntegrator, self).__init__(A, B, control_limits, **kwargs)
 
-
 if __name__ == '__main__':
     env = DoubleIntegrator()
     x0 = np.zeros((2, 1))

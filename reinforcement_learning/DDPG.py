@@ -1,7 +1,6 @@
 import numpy as np
 import tensorflow as tf
 from functools import partial
-from tensorflow_utils import fully_connected
 from replay_buffer import ReplayBuffer
 import pdb
 
@@ -91,14 +90,24 @@ class ActorModel(object):
             state_inputs = tf.placeholder(tf.float32, [None, state_dim], name='state')
 
             xavier_init = tf.contrib.layers.xavier_initializer()
-            with tf.variable_scope('layer1'):
-                layer1 = fully_connected(state_inputs, 400, activation=tf.nn.relu, var_init=xavier_init)
-            with tf.variable_scope('layer2'):
-                layer2 = fully_connected(layer1, 300, activation=tf.nn.relu, var_init=xavier_init)
-            with tf.variable_scope('actions'):
-                rand_init = partial(tf.random_uniform, minval=-3e-3, maxval=3e-3)
-                actions_out = fully_connected(layer2, action_dim, activation=tf.nn.tanh, var_init=rand_init)
-                actions_out = tf.add(tf.multiply(actions_out, action_scale), action_mean)
+            layer1 = tf.contrib.layers.fully_connected(state_inputs, 
+                400, 
+                activation_fn=tf.nn.relu, 
+                scope='layer1')
+            layer2 = tf.contrib.layers.fully_connected(layer1, 
+                300, 
+                activation_fn=tf.nn.relu, 
+                scope='layer2')
+
+            rand_init = lambda shape, dtype, partition_info=None: \
+                tf.random_uniform(shape=shape, minval=-3e-3, maxval=3e-3, dtype=dtype)
+            actions_out = tf.contrib.layers.fully_connected(layer2, 
+                action_dim, 
+                activation_fn=tf.nn.tanh, 
+                weights_initializer=rand_init,
+                scope='actions_out')
+            actions_out = tf.add(tf.multiply(actions_out, action_scale), action_mean)
+
         return state_inputs, actions_out
 
 class CriticModel(object):
@@ -178,15 +187,24 @@ class CriticModel(object):
             action_inputs = tf.placeholder(tf.float32, [None, action_dim], name='action')
 
             xavier_init = tf.contrib.layers.xavier_initializer()
-            with tf.variable_scope("layer1_state"):
-                layer1_state = fully_connected(state_inputs, 400, activation=tf.nn.relu, var_init=xavier_init)
-            with tf.variable_scope("layer1"):
-                layer1 = tf.concat([layer1_state, action_inputs], axis=1)
-            with tf.variable_scope("layer2"):
-                layer2 = fully_connected(layer1, 300, activation=tf.nn.relu, var_init=xavier_init)
-            with tf.variable_scope("q_vals"):
-                rand_init = partial(tf.random_uniform, minval=-3e-3, maxval=3e-3)
-                q_vals = fully_connected(layer2, 1, var_init=rand_init)
+
+            layer1_state = tf.contrib.layers.fully_connected(state_inputs, 
+                400, 
+                activation_fn=tf.nn.relu, 
+                scope='layer1_state')
+            layer1 = tf.concat([layer1_state, action_inputs], axis=1)
+            layer2 = tf.contrib.layers.fully_connected(layer1, 
+                300, 
+                activation_fn=tf.nn.relu, 
+                scope='layer2')
+            rand_init = lambda shape, dtype, partition_info=None: \
+                tf.random_uniform(shape=shape, minval=-3e-3, maxval=3e-3, dtype=dtype)
+            q_vals = tf.contrib.layers.fully_connected(layer2, 
+                1, 
+                activation_fn=None,
+                weights_initializer=rand_init,
+                scope='q_vals')
+
         return state_inputs, action_inputs, q_vals, q_vals
 
 

@@ -6,7 +6,7 @@ from ode import ode_solver_once
 class ModelBase(object):
     """
     Base Class for Models that are described by
-    Time Invariant Differential Qquations
+    Time Invariant Differential Equations, x_dot = f(x, u)
     
     Attributes:
         state_dim (int): number of state dimensions
@@ -16,7 +16,6 @@ class ModelBase(object):
         control_limits[1] is upper bound on control inputs
         dt (TYPE): timestep used for step() function
     """
-
     def __init__(self, state_dim, control_dim, control_limits, dt=0.05):
         self.state_dim = state_dim
         self.control_dim = control_dim

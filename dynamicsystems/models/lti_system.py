@@ -3,7 +3,8 @@ from model_base import ModelBase
 
 class LTISystem(ModelBase):
     """
-    Generic Linear Time Invariant System
+    Generic Linear Time Invariant System of the form
+    x_dot = Ax + Bu
     """
     def __init__(self, A, B, control_limits=None, **kwargs):
         if A.shape[0] != B.shape[0]:
