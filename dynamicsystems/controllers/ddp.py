@@ -5,9 +5,39 @@ import sys
 sys.path.append('../')
 from ode import ode_solver_once
 
+
+def numerical_quadraticization(func, x0, u0):
+    dx = 0.01
+    du = 0.01
+    f0 = func(x0, u0)
+
+    n = len(x0)
+    m = len(u0)
+    lx = np.zeros((n, 1))
+    for i in range(n):
+        vec_dx = np.zeros((n, 1))
+        vec_dx[i] = dx
+        new_f_x = func(x0 + vec_dx, u0) 
+        delta_f_x = (new_f_x - f0) / dx
+        lx[i] = delta_f_x
+
+    lu = np.zeros((m, 1))
+    for i in range(m):
+        vec_du = np.zeros((m, 1))
+        vec_du[i] = du
+        new_f_u = func(x0 + vec_du, u0) 
+        delta_f_u = (new_f_u - f0) / du
+        lu[i] = delta_f_u
+
+
+    lxx = np.zeros((n, n))
+    for i in range(n):
+        
+
+
 # differential dynamic programming
 class DDP(object):
-    def __init__(self, sys, cost_func):
+    def __init__(self, sys, cost_step_func):
         self.sys = sys
         self.cost_func = cost_func
 
@@ -27,32 +57,19 @@ class DDP(object):
         for control in U:
             x_list.append(self.sys.step(control))
 
-    def _backward_pass(self, x_list, u_list, dt):
+    def _backward_pass(self, x_list, u_list, dt, cost_step_func):
         linearized_list = []
         for x, u in zip(x_list, u_list):
             f0, A, B = self.sys.get_linearization(x, u)
 
-            # turn affine system into linear system
-            A_lin = np.zeros((A.shape[0]+1, A.shape[1]+1))
-            A_lin[:A.shape[0], :A.shape[1]] = A
-            A_lin[:-1, -1] = f0.squeeze()
-            A_lin[-1, -1] = 1
-
-            B_lin = np.zeros((B.shape[0]+1, B.shape[1]))
-            B_lin[:-1, :] = B
-
-
-            # discretize our continuous affine system
-            A_disc = np.eye(A_lin.shape[0]) + A_lin * dt
-            B_disc = B_lin * dt
-
-
+            # discretize our linearized system
+            f_x = np.eye(A.shape[0]) + A * dt
+            f_u = B * dt
 
             # quadraticize costs
 
-
-            linearized_list.append((A_disc, B_disc))
-
+            # quadraticize cost_step_func
+            l_x = 
 
 
 
