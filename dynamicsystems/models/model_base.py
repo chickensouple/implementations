@@ -2,7 +2,6 @@ import numpy as np
 import sys
 sys.path.append('../')
 from ode import ode_solver_once
-import lti_system
 
 class ModelBase(object):
     """

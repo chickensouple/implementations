@@ -74,7 +74,15 @@ class Pendulum(ModelBase):
 if __name__ == '__main__':
     # import matplotlib.pyplot as plt
 
-    # env = Pendulum()
+    pendulum = Pendulum()
+    x = np.array([[0, 0.]]).T
+    u = np.array([[0]])
+
+    f0, A, B = pendulum.get_linearization(x, u)
+    print("f0: " + str(f0))
+    print("A: " + str(A))
+    print("B: " + str(B))
+
     # env.x = np.array([[0.1, 0]]).T
     # controls = np.array([[0., 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]).T
     # states = np.zeros((env.state_dim, len(controls)))
