@@ -2,6 +2,7 @@ import numpy as np
 import sys
 sys.path.append('../')
 from ode import ode_solver_once
+import lti_system
 
 class ModelBase(object):
     """
@@ -87,7 +88,7 @@ class ModelBase(object):
         Args:
             x0 (numpy arr): state to linearize around
             u0 (numpy arr): control to linearize around
-        
+
         Returns:
             (list of numpy arrs): (f0, A, B)
         """
@@ -115,6 +116,18 @@ class ModelBase(object):
 
         return f0, A, B
 
+    # def get_linearized_system(self, x0, u0):
+    #     f0, A, B = self.get_linearization(x0, u0)
+
+    #     A_new = np.zeros((A.shape[0]+1, A.shape[1]+1))
+    #     A_new[:A.shape[0], :A.shape[1]] = A
+    #     A_new[:-1, -1] = f0
+    #     A_new[-1, -1] = 1
+
+    #     B_new = np.zeros((B.shape[0]+1, B.shape[1]))
+    #     B_new[:-1, :] = B
+
+    #     return LTISystem(A_new, B_new, self.control_limits)
 
     def get_diff_eq(self):
         """

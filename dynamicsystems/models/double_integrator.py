@@ -28,6 +28,9 @@ if __name__ == '__main__':
     u0 = np.zeros((1, 1))
     base, A, B = env.get_linearization(x0, u0)
 
+    test = env.get_linearized_system(x0, u0)
+    
+
     print "base:", base
     print "A:", A
     print "B:", B

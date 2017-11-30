@@ -53,7 +53,7 @@ def pid_rocket_test():
     pendulum = models.Rocket(dt=dt)
 
     target = np.array([100]).T
-    N = 4000
+    N = 3000
     states = np.zeros((3, N))
     controls = np.zeros(N)
     for i in range(N):

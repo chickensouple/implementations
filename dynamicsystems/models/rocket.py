@@ -48,6 +48,7 @@ class Rocket(ModelBase):
             if x_dot[1] <= 0:
                 x_dot[1] = 0
 
+
         return x_dot
 
 if __name__ == '__main__':
