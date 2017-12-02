@@ -1,7 +1,7 @@
 import numpy as np
 import sys
 sys.path.append('../')
-from ode import ode_solver_once
+from ode import ode_solver_once, ode_solver_once2
 
 class ModelBase(object):
     """
@@ -141,7 +141,8 @@ class ModelBase(object):
 
     def step(self, u):
         f = self.get_diff_eq()
-        self.x = ode_solver_once(f, self.x, u, self.dt)
+        # self.x = ode_solver_once(f, self.x, u, self.dt)
+        self.x = ode_solver_once_adaptive(f, self.x, u, self.dt)
         self.T += self.dt
         self.after_step()
         return self.x, self.T

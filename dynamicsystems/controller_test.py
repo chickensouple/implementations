@@ -48,12 +48,12 @@ def pid_test():
 def pid_rocket_test():
     import matplotlib.pyplot as plt
 
-    dt = 0.01
+    dt = 0.1
     pid = controllers.PID(-3., -0.01, 5., 100.)
     pendulum = models.Rocket(dt=dt)
 
     target = np.array([100]).T
-    N = 3000
+    N = 300
     states = np.zeros((3, N))
     controls = np.zeros(N)
     for i in range(N):
@@ -122,14 +122,14 @@ def energy_test():
 def hybrid_test():
     import matplotlib.pyplot as plt
 
-    dt = 0.01
+    dt = 0.1
     pid = controllers.PID(2., 0., -1.)
     energy_swingup = controllers.PendulumEnergySwingup(0., 2., 0.0001, 0.)
     controller = controllers.PendulumHybrid(pid, energy_swingup)
     pendulum = models.Pendulum(dt=dt)
     pendulum.set_state(np.array([[math.pi, 0.]]).T)
 
-    N = 800
+    N = 200
     target = np.array([0.]).T
     states = np.zeros((2, N))
     controls = np.zeros(N)

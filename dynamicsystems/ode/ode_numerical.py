@@ -59,6 +59,42 @@ def ode_solver_once(f, x, u, dt, stype='runge_kutta4'):
     f_2 = lambda t, x: f(x, u)
     return func(f_2, x, 0, dt)
 
+def ode_solver_once_adaptive(f, x, u, dt, stype='runge_kutta4'):
+    """
+    Numerically computes solution to a time invariant ode with control input
+    
+    Args:
+        f (function): ode to solve, x_dot = f(x, u)
+        x (numpy array): a state_size by 1 numpy array for state
+        u (numpy array): a control_size by 1 numpy array for control input
+        dt (float): time step to integrate over
+        stype (str, optional): type of solver, 'euler' or 'runge_kutta4'
+    
+    Returns:
+        numpy array: state_size by 1 numpy array for new state
+    """
+    if stype == 'euler':
+        func = euler
+    elif stype == 'runge_kutta4':
+        func = runge_kutta4
+
+    f_2 = lambda t, x: f(x, u)
+
+    large_step = func(f_2, x, 0, dt)
+    small_step1 = func(f_2, x, 0, dt*0.5)
+    small_step2 = func(f_2, small_step1, 0, dt*0.5)
+
+    # calculate percentage different in step values
+    diff = abs(np.linalg.norm(small_step2 - large_step) / np.linalg.norm(large_step))
+
+    if diff < 1e-5:
+        return small_step2
+
+    step1 = ode_solver_once_adaptive(f, x, u, dt*0.5, stype=stype)
+    step2 = ode_solver_once_adaptive(f, step1, u, dt*0.5, stype=stype)
+    return step2
+
+
 def euler(f, x, t, dt):
     # integrates an ode x_dot = f(t, x)
     # over one time step dt

@@ -72,104 +72,96 @@ class Pendulum(ModelBase):
 
 
 if __name__ == '__main__':
-    # import matplotlib.pyplot as plt
-
-    pendulum = Pendulum()
-    x = np.array([[0, 0.]]).T
-    u = np.array([[0]])
-
-    f0, A, B = pendulum.get_linearization(x, u)
-    print("f0: " + str(f0))
-    print("A: " + str(A))
-    print("B: " + str(B))
-
-    # env.x = np.array([[0.1, 0]]).T
-    # controls = np.array([[0., 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]).T
-    # states = np.zeros((env.state_dim, len(controls)))
-    # for idx, control in enumerate(controls):
-    #     state, _ = env.step(control)
-    #     states[:, idx] = state.squeeze()
-
-    # plt.scatter(states[0, :], states[1, :])
-    # plt.show()
-
-
-
-
-    import matplotlib
-    matplotlib.use('TkAgg')
-    import numpy as np
     import matplotlib.pyplot as plt
-    from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
-    from matplotlib.figure import Figure
-    import Tkinter as tk
-    import sys
-    from threading import Lock
-    import copy
 
-    class Application(tk.Frame):
-        def __init__(self, master=None):
-            tk.Frame.__init__(self,master)
-            self.dt = 0.02
-            self.pendulum = Pendulum(dt=self.dt, mu=0.1)
-            # self.pendulum.x = np.array([[0.05, 0]]).T
-            self.pendulum.x = np.array([[np.pi, 0]]).T
+    env = Pendulum()
+    env.set_state(np.array([[0.1, 0]]).T)
+    controls = np.array([[0., 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]).T
+    states = np.zeros((env.state_dim, len(controls)))
+    for idx, control in enumerate(controls):
+        state, _ = env.step(control)
+        states[:, idx] = state.squeeze()
 
-            self.createWidgets()
-
-            self.control_lock = Lock()
-            self.control = np.array([0])
-            self.update()
+    plt.scatter(states[0, :], states[1, :])
+    plt.show()
 
 
-        def on_key_event(self, event):
-            if event.key == 'left':
-                self.control_lock.acquire()
-                self.control[0] = -1.
-                self.control_lock.release()
-            elif event.key == 'right':
-                self.control_lock.acquire()
-                self.control[0] = 1.
-                self.control_lock.release()
 
-        def draw_pendulum(self):
-            theta = self.pendulum.x[0]
-            y = np.cos(theta)
-            x = -np.sin(theta)
 
-            self.ax.cla()
-            self.ax.plot([0, x], [0, y])
-            self.ax.axis((-1,1,-1,1))
+    # import matplotlib
+    # matplotlib.use('TkAgg')
+    # import numpy as np
+    # import matplotlib.pyplot as plt
+    # from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+    # from matplotlib.figure import Figure
+    # import Tkinter as tk
+    # import sys
+    # from threading import Lock
+    # import copy
 
-            self.canvas.draw()
+    # class Application(tk.Frame):
+    #     def __init__(self, master=None):
+    #         tk.Frame.__init__(self,master)
+    #         self.dt = 0.02
+    #         self.pendulum = Pendulum(dt=self.dt, mu=0.1)
+    #         # self.pendulum.x = np.array([[0.05, 0]]).T
+    #         self.pendulum.x = np.array([[np.pi, 0]]).T
+
+    #         self.createWidgets()
+
+    #         self.control_lock = Lock()
+    #         self.control = np.array([0])
+    #         self.update()
+
+
+    #     def on_key_event(self, event):
+    #         if event.key == 'left':
+    #             self.control_lock.acquire()
+    #             self.control[0] = -1.
+    #             self.control_lock.release()
+    #         elif event.key == 'right':
+    #             self.control_lock.acquire()
+    #             self.control[0] = 1.
+    #             self.control_lock.release()
+
+    #     def draw_pendulum(self):
+    #         theta = self.pendulum.x[0]
+    #         y = np.cos(theta)
+    #         x = -np.sin(theta)
+
+    #         self.ax.cla()
+    #         self.ax.plot([0, x], [0, y])
+    #         self.ax.axis((-1,1,-1,1))
+
+    #         self.canvas.draw()
 
         
-        def createWidgets(self):
-            fig = plt.figure(figsize=(8,8))
-            self.ax = fig.add_subplot(111)
+    #     def createWidgets(self):
+    #         fig = plt.figure(figsize=(8,8))
+    #         self.ax = fig.add_subplot(111)
 
-            self.canvas = FigureCanvasTkAgg(fig,master=root)
-            self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
-            self.canvas.mpl_connect('key_press_event', self.on_key_event)
+    #         self.canvas = FigureCanvasTkAgg(fig,master=root)
+    #         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+    #         self.canvas.mpl_connect('key_press_event', self.on_key_event)
 
-            self.draw_pendulum()
-            self.canvas.show()
-
-
-        def update(self):
-            self.control_lock.acquire()
-            control = copy.deepcopy(self.control)
-            self.control[0] = 0
-            self.control_lock.release()
-            self.pendulum.step(control)
-            self.draw_pendulum()
-            # refresh every 0.1 seconds
-            self.after(int(self.dt * 1e3), self.update)
+    #         self.draw_pendulum()
+    #         self.canvas.show()
 
 
-    root=tk.Tk()
-    app=Application(master=root)
-    app.mainloop()
+    #     def update(self):
+    #         self.control_lock.acquire()
+    #         control = copy.deepcopy(self.control)
+    #         self.control[0] = 0
+    #         self.control_lock.release()
+    #         self.pendulum.step(control)
+    #         self.draw_pendulum()
+    #         # refresh every 0.1 seconds
+    #         self.after(int(self.dt * 1e3), self.update)
+
+
+    # root=tk.Tk()
+    # app=Application(master=root)
+    # app.mainloop()
 
 
 
