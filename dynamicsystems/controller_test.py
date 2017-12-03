@@ -290,9 +290,9 @@ def lqr_test_nonzero():
 
 if __name__ == '__main__':
     # pid_test()
-    pid_rocket_test()
+    # pid_rocket_test()
     # energy_test()
     # hybrid_test()
-    # lqr_batch_test()
+    lqr_batch_test()
     # lqr_test()
     # lqr_test_nonzero()

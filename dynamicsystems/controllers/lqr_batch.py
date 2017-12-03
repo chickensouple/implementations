@@ -61,10 +61,7 @@ class LQRBatch(object):
         self.Y = np.dot(S_x.T, np.dot(Q_mat, S_x))
 
         # controller of form u = K*x0
-        self.K = -np.dot(np.linalg.inv(self.H), self.F.T)
-
-        # to solve for one x0
-        # u = np.linalg.solve(H, -np.dot(F.T, x0))
+        self.K = -np.linalg.solve(self.H, self.F.T)
 
     def solve(self, x0):
         if x0.shape != (self.state_dim, 1):

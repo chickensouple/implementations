@@ -1,7 +1,7 @@
 import numpy as np
 import sys
 sys.path.append('../')
-from ode import ode_solver_once, ode_solver_once2
+from ode import ode_solver_once, ode_solver_once_adaptive
 
 class ModelBase(object):
     """
