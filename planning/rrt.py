@@ -73,8 +73,6 @@ if __name__ == '__main__':
     import math
     pendulum = models.Pendulum()
 
-
-
     class PendulumFuncs(object):
         def __init__(self):
             self.pendulum = models.Pendulum()

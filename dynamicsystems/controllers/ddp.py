@@ -138,9 +138,15 @@ class DDP(object):
         x_list = [np.zeros((n, 1)) for _ in range(N)]
         u_list = [np.zeros((m, 1)) for _ in range(N)]
 
-        for i in range(20):
+        for i in range(5):
             x_list, u_list = self._forward_pass(x0, x_list, u_list, controller_list, dt)
             controller_list = self._backward_pass(x_list, u_list, dt, quad_step_cost, quad_final_cost)
+
+            # print "x_list:"
+            # print(np.array(x_list).squeeze())
+
+            # print "u_list:"
+            # print(np.array(u_list).squeeze())
 
         return controller_list, x_list, u_list
 
@@ -203,7 +209,7 @@ if __name__ == '__main__':
 
     def step_cost(x, u, target):
         cost = np.linalg.norm(x - target)**2
-        cost += np.linalg.norm(u)**2
+        cost += 2*np.linalg.norm(u)**2
         return cost    
 
 
@@ -218,16 +224,16 @@ if __name__ == '__main__':
 
     dt = 0.05
     x0 = np.array([[math.pi, 0.]]).T
-    pendulum = models.Pendulum(dt=dt)
+    pendulum = models.Pendulum(max_torque=np.Inf, dt=dt)
     pendulum.set_state(x0)
     ddp = DDP(pendulum)
 
-    # ddp.solve(x0, N, dt, quad_step_cost, quad_final_cost)
+    ddp.solve(x0, 100, dt, quad_step_cost, quad_final_cost)
 
-
+    # exit()
 
     N = 100
-    ddp_horizon = 10
+    ddp_horizon = 30
     states = np.zeros((2, N-1))
     controls = np.zeros(N-1)
     for i in range(N-1):
@@ -254,3 +260,6 @@ if __name__ == '__main__':
 
     plt.legend()
     plt.show()
+
+
+
