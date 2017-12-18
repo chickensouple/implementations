@@ -162,31 +162,36 @@ if __name__ == '__main__':
 
 				while True:
 					try:
-						move = raw_input('Enter your move: ')
+						move = raw_input('Enter your move or (q)uit: ')
+						if move == 'q':
+							exit()
 						move = move.split(',')
 						x = int(move[0])
 						y = int(move[1])
 						action = (x, y)
+						ttt.step(action)
+						curr_idx = get_next_idx(mm.tree, curr_idx, action)
 					except:
 						continue
 					break
-				ttt.step(action)
-				curr_idx = get_next_idx(mm.tree, curr_idx, action)
 
 			elif player == 1:
 				ttt.print_board()
 				while True:
 					try:
-						move = raw_input('Enter your move: ')
+						move = raw_input('Enter your move or (q)uit: ')
+						if move == 'q':
+							exit()
 						move = move.split(',')
 						x = int(move[0])
 						y = int(move[1])
 						action = (x, y)
-					except:
+						ttt.step(action)
+						curr_idx = get_next_idx(mm.tree, curr_idx, action)
+					except Exception as e:
+						print(e)
 						continue
 					break
-				ttt.step(action)
-				curr_idx = get_next_idx(mm.tree, curr_idx, action)
 
 				if ttt.get_winner() != None:
 					break
@@ -196,13 +201,11 @@ if __name__ == '__main__':
 				curr_idx = get_next_idx(mm.tree, curr_idx, opt_action)
 				ttt.print_board()
 
-
-
 		ttt.print_board()
 		winner = ttt.get_winner()
-		if winner == 0:
+		if winner == 1 - args.player:
 			print("You Lose!")
-		elif winner == 1:
+		elif winner == args.player:
 			print("You Win!")
 		else:
 			print("Tie Game!")
