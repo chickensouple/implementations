@@ -137,8 +137,6 @@ class DDP(object):
         x_list[0] = x0
         u_list = [np.zeros((m, 1)) for _ in range(N)]
 
-
-
         for i in range(50):
             x_list, u_list = self._forward_pass(x_list, u_list, controller_list, dt)
             controller_list = self._backward_pass(x_list, u_list, dt, quad_step_cost_func, quad_final_cost_func)

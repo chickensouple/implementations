@@ -57,6 +57,7 @@ class TabularMC(object):
 if __name__ == '__main__':
 
 	env = gym.make('CartPole-v0')
+	env._max_episode_steps = 500
 	num_actions = env.action_space.n
 	num_states = [1, 8, 8, 8]
 	

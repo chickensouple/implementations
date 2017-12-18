@@ -1,6 +1,6 @@
 import queue
 from graph import *
-from path_planning import *
+from graph_search import *
 from heuristics import *
 
 if __name__ == '__main__':
@@ -29,10 +29,11 @@ if __name__ == '__main__':
     print("Start: " + str(start))
     print("Goal: " + str(goal))
 
-    heuristic = partial(map_heuristic_l1, goal=goal)
+    heuristic = partial(cost_heuristic_l1, goal=goal)
     # path_found, path, cost = dijkstra(m, start, goal)
-    path_found, path, cost = astar(m, start, goal, heuristic)
+    path_found, path, cost, nodes_expanded = astar(m, start, goal, heuristic, tie_heuristic=tie_heuristic_high_g)
 
+    print("Nodes expanded: " + str(nodes_expanded))
     if path_found:
         print("Path Found")
         print("Cost: " + str(cost))

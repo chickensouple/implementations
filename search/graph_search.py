@@ -1,5 +1,5 @@
 import queue
-from heuristics import heuristic_none
+from heuristics import cost_heuristic_none, tie_heuristic_none, tie_heuristic_high_g
 import heapq
 
 class OpenList(object):
@@ -39,10 +39,13 @@ class OpenList(object):
         heapq._siftdown(self.heap, 0, idx)
 
 
-def astar(graph, start, goal, heuristic):
+
+def astar(graph, start, goal, cost_heuristic, tie_heuristic=tie_heuristic_high_g):
     # add start node to open list
     frontier = OpenList()
-    frontier.put(start, 0 + heuristic(start))
+    g = 0
+    h = cost_heuristic(start)
+    frontier.put(start, (g+h, tie_heuristic(g, h)))
     
     # set of nodes that have already been explored
     explored = set()
@@ -56,8 +59,10 @@ def astar(graph, start, goal, heuristic):
 
     
     path_found = False
+    nodes_expanded = 0
     while not frontier.empty():
         node = frontier.get()
+        nodes_expanded += 1
 
         # break if goal is found
         if node == goal:
@@ -72,8 +77,9 @@ def astar(graph, start, goal, heuristic):
             if neighbor in explored:
                 continue
 
-            cost = costs[node] + graph.get_cost(node, neighbor)
-            priority = cost + heuristic(neighbor)
+            g = costs[node] + graph.get_cost(node, neighbor)
+            h = cost_heuristic(neighbor)
+            priority = (g+h, tie_heuristic(g, h))
 
             # if frontier already has neighbor,
             # and priority is lower than what is already there
@@ -88,11 +94,11 @@ def astar(graph, start, goal, heuristic):
                 frontier.put(neighbor, priority)
 
             # update cost from start and predecessor
-            costs[neighbor] = cost
+            costs[neighbor] = g
             predecessors[neighbor] = node
 
     if not path_found:
-        return path_found, [], None
+        return path_found, [], None, nodes_expanded
 
     # construct path
     path = []
@@ -104,11 +110,11 @@ def astar(graph, start, goal, heuristic):
             path.append(node)
     path = path[::-1] # reverse list
 
-    return path_found, path, costs[goal]
+    return path_found, path, costs[goal], nodes_expanded
 
 
-def dijkstra(graph, start, goal):
-    return astar(graph, start, goal, heuristic_none)
+def dijkstra(graph, start, goal, **kwargs):
+    return astar(graph, start, goal, cost_heuristic_none, **kwargs)
 
 
 if __name__ == '__main__':

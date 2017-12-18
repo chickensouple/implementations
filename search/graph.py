@@ -70,10 +70,6 @@ class GraphBase(object):
     def get_cost(self, node1, node2):
         raise Exception('Not Implemented')
 
-    def heuristic(self, node):
-        raise Exception('Not Implemented')
-
-
 class MapGraph(GraphBase):
     def __init__(self, maptype='empty', size=20):
         # ones in the array are traversable
@@ -103,6 +99,7 @@ class MapGraph(GraphBase):
         return neighbors
 
     def get_cost(self, node1, node2):
+        # TODO: check if nodes are neighbors
         return 1
 
     def plot(self, path=None):
