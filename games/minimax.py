@@ -45,15 +45,14 @@ class MiniMaxSearch(object):
 
 	def reset(self):
 		# tree to keep track of minimax search
-		# at each node of tree, the game state is saved
+		# at each node of tree, the tuple of
+		# (game state, minimax value, opt_action, prev action) is saved
 		self.tree = Tree()
 
-	def search(self, game_state):
+	def search(self, game_state, player):
 		self.reset()
 		# create root node
-		root_idx = self.tree.insert_node((game_state, None), None)
-		self.game.set_state(game_state)
-		player = self.game.get_curr_player()
+		root_idx = self.tree.insert_node((game_state, None, None, None), None)
 
 		self.count = 0
 		val = self.__search_helper(root_idx, player, level=0)
@@ -61,61 +60,150 @@ class MiniMaxSearch(object):
 
 	def __search_helper(self, node_idx, player, level):
 		self.count += 1
-		if self.count % 1000 == 0:
+		if self.count % 10000 == 0:
 			print("tree len: " + str(len(self.tree.node_info)))
 
 		actions = self.game.get_valid_actions()
-		game_state, _ = self.tree.get_node_info(node_idx)
+		game_state, _, _, prev_action = self.tree.get_node_info(node_idx)
 
 		if len(actions) == 0:
 			winner = self.game.get_winner()
 			if player == winner:
 				val = 1 # winner
 			elif winner == -1:
-				val = 0.5 # tie
+				val = 0 # tie
 			else:
-				val = 0
+				val = -1
 
-			self.tree.update_node_info(node_idx, (game_state, val))
+			self.tree.update_node_info(node_idx, (game_state, val, None, prev_action))
 
 			return val
 
 		minimax_vals = []
 		for action in actions:
 			self.game.set_state(game_state)
-			self.game.make_action(action)
+			self.game.step(action)
 
-			new_node_idx = self.tree.insert_node((self.game.get_state(), None), node_idx)
+			new_node_idx = self.tree.insert_node((self.game.get_state(), None, None, action), node_idx)
 			val = self.__search_helper(new_node_idx, player, level+1)
 			minimax_vals.append(val)
 
 		self.game.set_state(game_state)
 		if player == self.game.get_curr_player():
-			val = np.max(minimax_vals)
+			val_idx = np.argmax(minimax_vals)
 		else:
-			val = np.min(minimax_vals)
-		self.tree.update_node_info(node_idx, (game_state, val))
+			val_idx = np.argmin(minimax_vals)
+		val = minimax_vals[val_idx]
+		opt_action = actions[val_idx]
 
+		self.tree.update_node_info(node_idx, (game_state, val, opt_action, prev_action))
 		return val
 
 
 if __name__ == '__main__':
 	from tictactoe import TicTacToe
+	import pickle
+	import argparse
+
+	parser = argparse.ArgumentParser(description='Minimax TicTacToe Player')
+	parser.add_argument('--type', dest='type', type=str, 
+		choices=['train', 'test'],
+		required=True,
+		help='train (build minimax tree) or test')
+	parser.add_argument('--file', dest='file', type=str,
+		default='ttt.p',
+		help='file to save/load minimax tree in')
+	parser.add_argument('--player', dest='player', type=int,
+		choices=[0, 1],
+		default=0,
+		help='which player to solve minimax tree for')
+	args = parser.parse_args()
+
+	player = args.player
+
 	ttt = TicTacToe()
+	if args.type == 'train':
+		initial_game_state = ttt.get_state()
 
-	for i in range(4):
-		valid_actions = ttt.get_valid_actions()
-		action = valid_actions[0]
-		ttt.make_action(action)
-	ttt.print_board()
+		mm = MiniMaxSearch(ttt)
+		val = mm.search(initial_game_state, player)
+		print("Search Ended")
+		print("val: " + str(val))
+		print("tree size: " + str(len(mm.tree.node_info)))
+
+		# clean tree for saving. only save the necessary information
+		for i in range(len(mm.tree.node_info)):
+			_, _, opt_action, prev_action = mm.tree.node_info[i]
+			mm.tree.node_info[i] = (opt_action, prev_action)
+
+		pickle.dump(mm, open(args.file, 'wb'))
+	elif args.type == 'test':
+		mm = pickle.load(open(args.file, 'rb'))
+		curr_idx = 0
+
+		def get_next_idx(tree, curr_idx, action):
+			children_indices = tree.p_c_edges[curr_idx]
+			for idx in children_indices:
+				_, idx_action = tree.get_node_info(idx)
+				if action == idx_action:
+					return idx
+			raise Exception('No such action')
 
 
-	initial_game_state = ttt.get_state()
+		while ttt.get_winner() == None:
+			if player == 0:
+				opt_action, _ = mm.tree.get_node_info(curr_idx)
+				ttt.step(opt_action)
+				curr_idx = get_next_idx(mm.tree, curr_idx, opt_action)
+				ttt.print_board()
 
-	mm = MiniMaxSearch(ttt)
-	val = mm.search(initial_game_state)
-	print("Search Ended")
-	print("val: " + str(val))
-	print("tree size: " + str(len(mm.tree.node_info)))
+				if ttt.get_winner() != None:
+					break
 
+				while True:
+					try:
+						move = raw_input('Enter your move: ')
+						move = move.split(',')
+						x = int(move[0])
+						y = int(move[1])
+						action = (x, y)
+					except:
+						continue
+					break
+				ttt.step(action)
+				curr_idx = get_next_idx(mm.tree, curr_idx, action)
+
+			elif player == 1:
+				ttt.print_board()
+				while True:
+					try:
+						move = raw_input('Enter your move: ')
+						move = move.split(',')
+						x = int(move[0])
+						y = int(move[1])
+						action = (x, y)
+					except:
+						continue
+					break
+				ttt.step(action)
+				curr_idx = get_next_idx(mm.tree, curr_idx, action)
+
+				if ttt.get_winner() != None:
+					break
+
+				opt_action, _ = mm.tree.get_node_info(curr_idx)
+				ttt.step(opt_action)
+				curr_idx = get_next_idx(mm.tree, curr_idx, opt_action)
+				ttt.print_board()
+
+
+
+		ttt.print_board()
+		winner = ttt.get_winner()
+		if winner == 0:
+			print("You Lose!")
+		elif winner == 1:
+			print("You Win!")
+		else:
+			print("Tie Game!")
 

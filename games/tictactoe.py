@@ -62,9 +62,9 @@ class TicTacToe(object):
 		self.curr_player = state[1]
 		self.winner = state[2]
 
-	def make_action(self, action):
+	def step(self, action):
 		"""
-		Make a action for the current player
+		takes an action for the current player
 		
 		Args:
 		    action (tuple): (x, y) location of action on the board	
@@ -72,10 +72,13 @@ class TicTacToe(object):
 		if self.winner != None:
 			return
 
+		if self.board[action] != -1:
+			self.print_board()
+			raise Exception('Invalid Move')
+
 		self.board[action] = self.curr_player
 		self.curr_player = 1 - self.curr_player
 		self.winner = self._check_winner()
-
 
 	def print_board(self):
 		"""
@@ -115,13 +118,13 @@ class TicTacToe(object):
 		if np.all(diag == 0):
 			return 0
 		if np.all(diag == 1):
-			return 0
+			return 1
 
 		diag = np.diag(np.fliplr(self.board))
 		if np.all(diag == 0):
 			return 0
 		if np.all(diag == 1):
-			return 0
+			return 1
 
 		# check for tie
 		if np.all(self.board != -1):
@@ -138,7 +141,7 @@ if __name__ == '__main__':
 		if len(valid_actions) == 0:
 			continue
 		action = valid_actions[0]
-		tictactoe.make_action(action)
+		tictactoe.step(action)
 
 		tictactoe.print_board()
 
