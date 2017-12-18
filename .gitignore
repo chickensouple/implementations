@@ -1,2 +1,6 @@
+*.p
 *.pyc
 reinforcement_learning/logs
+
+
+
