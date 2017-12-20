@@ -54,18 +54,20 @@ class MiniMaxSearch(object):
 		# create root node
 		root_idx = self.tree.insert_node((game_state, None, None, None), None)
 
-		self.count = 0
+		self.count = 0 # used for counting the number of recursive function calls
 		val = self.__search_helper(root_idx, player, level=0)
 		return val
 
 	def __search_helper(self, node_idx, player, level):
 		self.count += 1
 		if self.count % 10000 == 0:
-			print("tree len: " + str(len(self.tree.node_info)))
+			print("tree size: " + str(len(self.tree.node_info)))
 
+		# get next actions
 		actions = self.game.get_valid_actions()
 		game_state, _, _, prev_action = self.tree.get_node_info(node_idx)
 
+		# if we have reached a leaf node
 		if len(actions) == 0:
 			winner = self.game.get_winner()
 			if player == winner:
@@ -75,10 +77,11 @@ class MiniMaxSearch(object):
 			else:
 				val = -1
 
+			# update minimax value in the tree
 			self.tree.update_node_info(node_idx, (game_state, val, None, prev_action))
-
 			return val
 
+		# recursively search each child node
 		minimax_vals = []
 		for action in actions:
 			self.game.set_state(game_state)
@@ -88,6 +91,8 @@ class MiniMaxSearch(object):
 			val = self.__search_helper(new_node_idx, player, level+1)
 			minimax_vals.append(val)
 
+		# take either the minimum or maximum of the child node values
+		# depending on whether you are the min player or max player
 		self.game.set_state(game_state)
 		if player == self.game.get_curr_player():
 			val_idx = np.argmax(minimax_vals)
@@ -116,7 +121,7 @@ if __name__ == '__main__':
 	parser.add_argument('--player', dest='player', type=int,
 		choices=[0, 1],
 		default=0,
-		help='which player to solve minimax tree for')
+		help='which player to solve/test minimax tree for')
 	args = parser.parse_args()
 
 	player = args.player

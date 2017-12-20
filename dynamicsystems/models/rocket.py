@@ -28,6 +28,11 @@ class Rocket(ModelBase):
         super(Rocket, self).reset()
         self.set_state(np.array([[0, 0, 100.]]).T)
 
+    def after_step(self):
+        if self.x[0] < 0:
+            self.x[0] = 0
+            self.x[1] = 0
+
     def diff_eq(self, x, u):
         u = self._check_and_clip(x, u)
 
@@ -47,7 +52,6 @@ class Rocket(ModelBase):
         if x[0] <= 0:
             if x_dot[1] <= 0:
                 x_dot[1] = 0
-
 
         return x_dot
 

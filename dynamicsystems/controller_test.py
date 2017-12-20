@@ -48,12 +48,12 @@ def pid_test():
 def pid_rocket_test():
     import matplotlib.pyplot as plt
 
-    dt = 0.1
+    dt = 0.05
     pid = controllers.PID(-3., -0.01, 5., 100.)
     pendulum = models.Rocket(dt=dt)
 
     target = np.array([100]).T
-    N = 300
+    N = 1600
     states = np.zeros((3, N))
     controls = np.zeros(N)
     for i in range(N):
@@ -292,7 +292,7 @@ if __name__ == '__main__':
     # pid_test()
     # pid_rocket_test()
     # energy_test()
-    # hybrid_test()
-    lqr_batch_test()
+    hybrid_test()
+    # lqr_batch_test()
     # lqr_test()
     # lqr_test_nonzero()

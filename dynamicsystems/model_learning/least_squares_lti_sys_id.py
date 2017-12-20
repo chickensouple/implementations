@@ -55,13 +55,13 @@ def least_squares_lti_sys_id(x, u, x_next):
 
 
 if __name__ == '__main__':
-    n = 3
-    m = 2
+    n = 2
+    m = 4
 
     A = np.random.random((n, n))
     B = np.random.random((n, m))
 
-    l = 6
+    l = n+m
     x = np.random.random((n, l))
     u = np.random.random((m, l))
     x_next = np.dot(A, x) + np.dot(B, u)

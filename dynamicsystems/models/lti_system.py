@@ -36,7 +36,6 @@ class LTISystem(ModelBase):
         B_disc = (self.B * dt)
         return A_disc, B_disc
 
-
 if __name__ == '__main__':
     A = np.array([[1, 2., 0], [0, 1., 0.5], [0, 1., 0]])
     B = np.array([[0, 1, 2.]]).T
