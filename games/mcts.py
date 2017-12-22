@@ -133,6 +133,7 @@ class MonteCarloTreeSearch(object):
 				new_value = (1.0 / (1 + old_visit)) * (old_visit * old_value + val)
 			else:
 				new_value = (1.0 / (1 + old_visit)) * (old_visit * old_value - val)
+
 			new_visit = old_visit + 1
 			self.tree.update_node_info(tree_idx, (old_game_state, new_value, new_visit, old_action))
 			tree_idx = self.tree.c_p_edges[tree_idx]
@@ -172,15 +173,8 @@ if __name__ == '__main__':
 	mcts = MonteCarloTreeSearch(ttt)
 
 	while ttt.get_winner() == None:
-		# opponent move
-		curr_state = ttt.get_state()
-		action, val = mcts.search(curr_state, 2000)
-		ttt.set_state(curr_state)
-		ttt.step(action)
 		ttt.print_board()
 
-		if ttt.get_winner() != None:
-			break
 
 		move = raw_input('Enter your move or (q)uit: ')
 		if move == 'q':
@@ -191,7 +185,16 @@ if __name__ == '__main__':
 		action = (x, y)
 		ttt.step(action)
 
+		if ttt.get_winner() != None:
+			break
+		
+		# opponent move
+		curr_state = ttt.get_state()
+		action, val = mcts.search(curr_state, 2000)
+		ttt.set_state(curr_state)
+		ttt.step(action)
 
+	ttt.print_board()
 	winner = ttt.get_winner()
 	if winner == 0:
 		print("You Lost!")
