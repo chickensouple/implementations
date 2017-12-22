@@ -43,7 +43,7 @@ class Tree(object):
 class MonteCarloTreeSearch(object):
 	def __init__(self, game):
 		self.game = game
-		self.c = 2
+		self.c = 2.0
 		self.reset()
 
 	def reset(self):
@@ -127,7 +127,12 @@ class MonteCarloTreeSearch(object):
 		# backprop
 		while tree_idx != root_idx:
 			old_game_state, old_value, old_visit, old_action = self.tree.get_node_info(tree_idx)
-			new_value = (1.0 / (1 + old_visit)) * (old_visit * old_value + val)
+
+			self.game.set_state(old_game_state)
+			if self.game.get_curr_player() != curr_player:
+				new_value = (1.0 / (1 + old_visit)) * (old_visit * old_value + val)
+			else:
+				new_value = (1.0 / (1 + old_visit)) * (old_visit * old_value - val)
 			new_visit = old_visit + 1
 			self.tree.update_node_info(tree_idx, (old_game_state, new_value, new_visit, old_action))
 			tree_idx = self.tree.c_p_edges[tree_idx]
@@ -161,14 +166,15 @@ class MonteCarloTreeSearch(object):
 if __name__ == '__main__':
 	from tictactoe import TicTacToe
 
+	# np.random.seed(0)
+
 	ttt = TicTacToe()
-	initial_state = ttt.get_state()
 	mcts = MonteCarloTreeSearch(ttt)
 
 	while ttt.get_winner() == None:
 		# opponent move
 		curr_state = ttt.get_state()
-		action, val = mcts.search(curr_state)
+		action, val = mcts.search(curr_state, 2000)
 		ttt.set_state(curr_state)
 		ttt.step(action)
 		ttt.print_board()
