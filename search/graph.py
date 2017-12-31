@@ -72,6 +72,7 @@ class GraphBase(object):
 
 class MapGraph(GraphBase):
     def __init__(self, maptype='empty', size=20):
+        super(MapGraph, self).__init__()
         # ones in the array are traversable
         # zeros are not
         if maptype == 'empty':

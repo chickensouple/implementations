@@ -1,5 +1,5 @@
 import numpy as np
-from model_base import ModelBase
+from . model_base import ModelBase
 
 class LTISystem(ModelBase):
     """
@@ -44,7 +44,7 @@ if __name__ == '__main__':
     u0 = np.zeros((1, 1))
     base, A, B = env.get_linearization(x0, u0)
 
-    print "base:", base
-    print "A:", A
-    print "B:", B
+    print("base: " + str(base))
+    print("A: " + str(A))
+    print("B: " + str(B))
 

@@ -1,6 +1,6 @@
 import numpy as np
-from model_base import ModelBase
 import math
+from . model_base import ModelBase
 
 class SimpleCar(ModelBase):
     """

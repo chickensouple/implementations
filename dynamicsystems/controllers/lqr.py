@@ -26,7 +26,6 @@ class LQR(object):
         if R.shape != (self.control_dim, self.control_dim):
             raise Exception('R must be l by l')
 
-
         P_k = np.copy(P)
 
         for i in range(N):

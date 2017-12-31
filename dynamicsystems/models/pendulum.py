@@ -1,6 +1,6 @@
 import numpy as np
 import math
-from model_base import ModelBase
+from . model_base import ModelBase
 
 class Pendulum(ModelBase):
     """
