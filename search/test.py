@@ -1,4 +1,3 @@
-import queue
 from graph import *
 from graph_search import *
 from heuristics import *
@@ -55,7 +54,7 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     from functools import partial
 
-    prob_type = 'car' # ['grid', 'car']
+    prob_type = 'grid' # ['grid', 'car']
 
     seed = np.random.randint(2**31)
     seed = 836485953
@@ -65,7 +64,7 @@ if __name__ == '__main__':
     if prob_type == 'grid':
         m = MapGraph(size=80, maptype='rooms', connectivity=8)
         start, goal = generate_start_and_goal_grid(m)
-        heuristic = partial(cost_heuristic_linf, goal=goal)
+        heuristic = partial(cost_heuristic_l2, goal=goal)
     elif prob_type == 'car':
         m = MapGraphCar(cartype='reed-shepp', size=30, maptype='rooms')
         start, goal = generate_start_and_goal_car(m)

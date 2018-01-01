@@ -165,8 +165,10 @@ class LPAStar(object):
         self.g[self.start] = float('inf')
         self.g[self.goal] = float('inf')
 
-    def search(self):
+    def update_graph(self, graph):
+        self.graph = graph
 
+    def search(self):
         # add start node to open list
         h = self.cost_heuristic(self.start)
         self.open_list.put(self.start, (h, 0))
@@ -198,7 +200,7 @@ class LPAStar(object):
         path = [self.goal]
         while node != self.start:
             predecessors, _ = self.graph.get_predecessors(node)
-            vals = np.array([self.rhs.get(pred, float('inf')) for pred in predecessors])
+            vals = np.array([self.g.get(pred, float('inf')) for pred in predecessors])
             idx = np.argmin(vals)
             node = predecessors[idx]
             path.append(node)
@@ -211,7 +213,11 @@ class LPAStar(object):
         if node != self.start:
             predecessors, costs = self.graph.get_predecessors(node)
             possible_rhs_vals = [self.rhs.get(pred, float('inf'))+cost for pred, cost in zip(predecessors, costs)]
-            self.rhs[node] = min(possible_rhs_vals)
+            if len(possible_rhs_vals) == 0:
+                # no possible rhs vals
+                self.rhs[node] = float('inf')
+            else:
+                self.rhs[node] = min(possible_rhs_vals)
         if self.open_list.contains(node):
             # remove from open list
             # TODO: get more efficient way to do this
@@ -240,7 +246,8 @@ class LPAStar(object):
         Args:
             node (object): node to be updated
         """
-        pass
+        self._update_node(node)
+
 
 
 

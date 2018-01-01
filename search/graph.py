@@ -92,6 +92,10 @@ class MapGraph(GraphBase):
         self.connectivity = connectivity
 
     def get_successors(self, node):
+        # if the node is occupied, there are no successors
+        if self.arr[node[0], node[1]]==0:
+            return [], []
+
         shape = self.arr.shape
         
         neighbors = []
@@ -142,20 +146,25 @@ class MapGraph(GraphBase):
     def get_predecessors(self, node):
         return self.get_successors(node)
 
-    def plot(self, path=None):
-        plt.cla()
-        plt.imshow(self.arr)
+    def plot(self, path=None, ax=None):
+        if ax == None:
+            ax = plt.gca()
+
+        ax.cla()
+        ax.imshow(self.arr.T, interpolation='none', vmin=0, vmax=1, origin='lower', cmap='gray')
+        ax.set_xlabel('x')
+        ax.set_ylabel('y')
 
         if path != None:
             for i in range(1, len(path)):
                 node1 = path[i-1]
                 node2 = path[i]
-                plt.plot([node1[1], node2[1]], [node1[0], node2[0]], c='r')
+                ax.plot([node1[0], node2[0]], [node1[1], node2[1]], c='r')
 
             path_arr = np.array(path)
-            plt.scatter(path_arr[:, 1], path_arr[:, 0], c='r')
-            plt.scatter(path_arr[0, 1], path_arr[0, 0], c='g')
-            plt.scatter(path_arr[-1, 1], path_arr[-1, 0], c='b')
+            ax.scatter(path_arr[:, 0], path_arr[:, 1], c='r')
+            ax.scatter(path_arr[0, 0], path_arr[0, 1], c='g')
+            ax.scatter(path_arr[-1, 0], path_arr[-1, 1], c='b')
 
 
 class MapGraphCar(MapGraph):
@@ -180,6 +189,9 @@ class MapGraphCar(MapGraph):
         return valid
 
     def get_successors(self, state):
+        if self.arr[state[0], state[1]]==0:
+            return [], []
+
         forward_pos = (state[0]+state[2], state[1]+state[3], state[2], state[3])
         left_pos = (forward_pos[0]-state[3], forward_pos[1]+state[2], -state[3], state[2])
         right_pos = (forward_pos[0]+state[3], forward_pos[1]-state[2], state[3], -state[2])
@@ -235,11 +247,22 @@ class MapGraphCar(MapGraph):
         return neighbors, costs
 
 
-    def plot(self, path=None):
-        plt.cla()
-        plt.imshow(self.arr)
+    def get_predecessors(self, state):
+        if self.cartype == 'dubins':
+            raise Exception('Not Yet Implemented')
+        elif self.cartype == 'reed-shepp':
+            return self.get_successors(state)
 
-        def draw_curve(start, end):
+    def plot(self, path=None, ax=None):
+        if ax == None:
+            ax = plt.gca()
+
+        ax.cla()
+        ax.imshow(self.arr.T, interpolation='none', vmin=0, vmax=1, origin='lower', cmap='gray')
+        ax.set_xlabel('x')
+        ax.set_ylabel('y')
+
+        def draw_curve(ax, start, end):
             forward_pos = (start[0]+start[2], start[1]+start[3])
             left_pos = (forward_pos[0]-start[3], forward_pos[1]+start[2])
             right_pos = (forward_pos[0]+start[3], forward_pos[1]-start[2])
@@ -252,7 +275,7 @@ class MapGraphCar(MapGraph):
 
             if (end_pos == forward_pos or end_pos == neg_pos):
                 # forward
-                plt.plot([start[0], end[0]], [start[1], end[1]], c='r')
+                ax.plot([start[0], end[0]], [start[1], end[1]], c='r')
             elif (end_pos == left_pos):
                 # left
                 center = (start[0]-start[3], start[1]+start[2])
@@ -260,7 +283,7 @@ class MapGraphCar(MapGraph):
 
                 start_theta = math.atan2(delta[1], delta[0]) * 180. / math.pi
                 arc = Arc(center, 2, 2, theta1=start_theta, theta2=start_theta+90, color='r')
-                plt.gca().add_patch(arc)
+                ax.add_patch(arc)
             elif (end_pos == right_pos):
                 # right
                 center = (start[0]+start[3], start[1]-start[2])
@@ -268,11 +291,11 @@ class MapGraphCar(MapGraph):
 
                 start_theta = math.atan2(delta[1], delta[0]) * 180. / math.pi
                 arc = Arc(center, 2, 2, theta2=start_theta, theta1=start_theta-90, color='r')
-                plt.gca().add_patch(arc)
+                ax.add_patch(arc)
             elif (end_pos == neg_left_pos):
-                draw_curve(end, start)
+                draw_curve(ax, end, start)
             elif (end_pos == neg_right_pos):
-                draw_curve(end, start)
+                draw_curve(ax, end, start)
 
         if path != None:
             for i in range(1, len(path)):
@@ -280,18 +303,18 @@ class MapGraphCar(MapGraph):
                 node2 = path[i]
 
                 # swapping x and y to draw on image
-                node1 = (node1[1], node1[0], node1[3], node1[2])
-                node2 = (node2[1], node2[0], node2[3], node2[2])
-                draw_curve(node1, node2)
+                # node1 = (node1[1], node1[0], node1[3], node1[2])
+                # node2 = (node2[1], node2[0], node2[3], node2[2])
+                draw_curve(ax, node1, node2)
 
             path_arr = np.array(path)
-            plt.scatter(path_arr[:, 1], path_arr[:, 0], c='r')
-            plt.scatter(path_arr[0, 1], path_arr[0, 0], c='g')
-            plt.scatter(path_arr[-1, 1], path_arr[-1, 0], c='b')
+            ax.scatter(path_arr[:, 0], path_arr[:, 1], c='r')
+            ax.scatter(path_arr[0, 0], path_arr[0, 1], c='g')
+            ax.scatter(path_arr[-1, 0], path_arr[-1, 1], c='b')
 
-            plt.gca().arrow(path_arr[0, 1], path_arr[0, 0], path_arr[0, 3], path_arr[0, 2], 
+            ax.arrow(path_arr[0, 0], path_arr[0, 1], path_arr[0, 2], path_arr[0, 3], 
                 head_width=0.4, head_length=0.3, color='g')
-            plt.gca().arrow(path_arr[-1, 1], path_arr[-1, 0], path_arr[-1, 3], path_arr[-1, 2], 
+            ax.arrow(path_arr[-1, 0], path_arr[-1, 1], path_arr[-1, 2], path_arr[-1, 3], 
                 head_width=0.4, head_length=0.3, color='b')
 
 
