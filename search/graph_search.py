@@ -72,12 +72,12 @@ def astar(graph, start, goal, cost_heuristic, tie_heuristic=tie_heuristic_high_g
         explored.add(node)
 
         # expand neighbors
-        for neighbor in graph.get_neighbors(node):
+        for neighbor, cost in zip(*graph.get_neighbors(node)):
             # if we have already explored neighbor dont add to open list
             if neighbor in explored:
                 continue
 
-            g = costs[node] + graph.get_cost(node, neighbor)
+            g = costs[node] + cost
             h = cost_heuristic(neighbor)
             priority = (g+h, tie_heuristic(g, h))
 

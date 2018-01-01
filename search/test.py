@@ -3,33 +3,82 @@ from graph import *
 from graph_search import *
 from heuristics import *
 
+def check_valid_pos(mapgraph, pos):
+    if (pos[0] < 0 or pos[0] >= mapgraph.arr.shape[0]-1):
+        return False
+    if (mapgraph.arr[pos[0], pos[1]] == 0):
+        return False
+    return True
+
+def generate_start_and_goal_grid(mapgraph):
+    start = np.random.randint(mapgraph.arr.shape[0], size=(2))
+    while not check_valid_pos(mapgraph, start):
+        start = np.random.randint(mapgraph.arr.shape[0], size=(2))
+
+    goal = np.random.randint(mapgraph.arr.shape[0], size=(2))
+    while not check_valid_pos(mapgraph, goal) or np.all(start == goal):
+        goal = np.random.randint(mapgraph.arr.shape[0], size=(2))
+
+    start = tuple(start)
+    goal = tuple(goal)
+    return start, goal
+
+def generate_start_and_goal_car(mapgraph):
+    def gen_direction():
+        direction = np.random.randint(4)
+        if (direction == 0):
+            return np.array([1, 0])
+        if (direction == 1):
+            return np.array([-1, 0])
+        if (direction == 2):
+            return np.array([0, 1])
+        if (direction == 3):
+            return np.array([0, -1])
+
+    start = np.random.randint(mapgraph.arr.shape[0], size=(2))
+    start_dir = gen_direction()
+    while not check_valid_pos(mapgraph, start) or \
+        not check_valid_pos(mapgraph, start+start_dir):
+        start = np.random.randint(mapgraph.arr.shape[0], size=(2))
+        start_dir = gen_direction()
+
+    goal = np.random.randint(mapgraph.arr.shape[0], size=(2))
+    goal_dir = gen_direction()
+    while not check_valid_pos(mapgraph, goal) or \
+        np.all(start == goal) or \
+        not check_valid_pos(mapgraph, goal-goal_dir):
+        goal = np.random.randint(mapgraph.arr.shape[0], size=(2))
+    goal_dir = gen_direction()
+
+    start = tuple(np.append(start, start_dir))
+    goal = tuple(np.append(goal, goal_dir))
+    return start, goal
+
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
     from functools import partial
 
-    def generate_start_and_goal(mapgraph):
-        start = np.random.randint(m.arr.shape[0], size=(2))
-        while mapgraph.arr[start[0], start[1]] == 0:
-            start = np.random.randint(m.arr.shape[0], size=(2))
-
-        goal = np.random.randint(m.arr.shape[0], size=(2))
-        while mapgraph.arr[goal[0], goal[1]] == 0 or np.all(start == goal):
-            goal = np.random.randint(m.arr.shape[0], size=(2))
-
-        start = tuple(start)
-        goal = tuple(goal)
-        return start, goal
+    prob_type = 'car' # ['grid', 'car']
 
     seed = np.random.randint(2**31)
-    # seed = 385233812
+    # seed = 236900777
     np.random.seed(seed)
     print("Seed: " + str(seed))
-    m = MapGraph(size=80, maptype='rooms')
-    start, goal = generate_start_and_goal(m)
+
+    if prob_type == 'grid':
+        m = MapGraph(size=80, maptype='rooms', connectivity=8)
+        start, goal = generate_start_and_goal_grid(m)
+        heuristic = partial(cost_heuristic_linf, goal=goal)
+    elif prob_type == 'car':
+        m = MapGraphCar(cartype='reed-shepp', size=30, maptype='rooms')
+        start, goal = generate_start_and_goal_car(m)
+        heuristic = lambda node: cost_heuristic_l2(node[0:2], goal[0:2])
+        # start = (10, 10, 0, 1)
+        # goal = (9, 10, -1, 0)
+
     print("Start: " + str(start))
     print("Goal: " + str(goal))
 
-    heuristic = partial(cost_heuristic_l1, goal=goal)
     # path_found, path, cost = dijkstra(m, start, goal)
     path_found, path, cost, nodes_expanded = astar(m, start, goal, heuristic, tie_heuristic=tie_heuristic_high_g)
 
@@ -45,5 +94,7 @@ if __name__ == '__main__':
         print("Path Not Found")
 
         m.plot()
+        plt.scatter(start[1], start[0], c='g')
+        plt.scatter(goal[1], goal[0], c='b')
         plt.show()
 
