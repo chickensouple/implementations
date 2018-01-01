@@ -1,6 +1,7 @@
 import queue
 from heuristics import cost_heuristic_none, tie_heuristic_none, tie_heuristic_high_g
 import heapq
+import numpy as np
 
 class OpenList(object):
     def __init__(self):
@@ -121,7 +122,7 @@ def astar(graph, start, goal, cost_heuristic=cost_heuristic_none, tie_heuristic=
             predecessors[successor] = node
 
     if not path_found:
-        return path_found, [], None, nodes_expanded
+        return path_found, [], float('inf'), nodes_expanded
 
     # construct path
     path = []
@@ -137,7 +138,7 @@ def astar(graph, start, goal, cost_heuristic=cost_heuristic_none, tie_heuristic=
 
 
 class LPAStar(object):
-    def __init__(self, cost_heuristic=cost_heuristic_none):
+    def __init__(self, graph, start, goal, cost_heuristic=cost_heuristic_none):
         """
         Sets up basic options for LPA* search
         cost_heuristic is the guiding heuristic (h value) used in LPA*.
@@ -147,6 +148,9 @@ class LPAStar(object):
             cost_heuristic (func, optional): function that takes in (current_node, goal_node) and returns a scalar
         """
         self.cost_heuristic = cost_heuristic
+        self.graph = graph
+        self.start = start
+        self.goal = goal
         self.reset()
 
     def reset(self):
@@ -154,45 +158,68 @@ class LPAStar(object):
         self.rhs = dict()
         self.g = dict()
 
-    def search(self, graph, start, goal):
         # set initial rhs values
-        self.rhs[start] = 0
-        self.rhs[goal] = float('inf')
+        self.rhs[self.start] = 0
+        self.rhs[self.goal] = float('inf')
 
-        self.g[start] = float('inf')
-        self.g[goal] = float('inf')
+        self.g[self.start] = float('inf')
+        self.g[self.goal] = float('inf')
+
+    def search(self):
 
         # add start node to open list
-        h = self.cost_heuristic(start)
-        self.open_list.put(start, (h, 0))
+        h = self.cost_heuristic(self.start)
+        self.open_list.put(self.start, (h, 0))
 
-        # print self.open_list.peek()
+        # node expansions
         nodes_expanded = 0
-        while not self.open_list.empty() and (self.open_list.peek()[0] < self._compute_key(goal) or self.rhs[goal] != self.g[goal]):
+        while not self.open_list.empty() and \
+            (self.open_list.peek()[0] < self._compute_key(self.goal) or self.rhs[self.goal] != self.g[self.goal]):
+
             node = self.open_list.get()
             if self.g.get(node, float('inf')) > self.rhs.get(node, float('inf')):
                 self.g[node] = self.rhs.get(node, float('inf'))
-                for successor in graph.get_successors(node)[0]:
-                    self._update_node(successor, start, graph)
+                for successor in self.graph.get_successors(node)[0]:
+                    self._update_node(successor)
             else:
                 self.g[node] = float('inf')
-                self._update_node(node, start, graph)
-                for successor in graph.get_successors(node)[0]:
-                    self._update_node(successor, start, graph)
+                self._update_node(node)
+                for successor in self.graph.get_successors(node)[0]:
+                    self._update_node(successor)
             nodes_expanded += 1
-        print("nodes expanded: " + str(nodes_expanded))
 
 
-    def _update_node(self, node, start, graph):
-        if node != start:
-            predecessors, costs = graph.get_predecessors(node)
-            possible_rhs_vals = [self.rhs.get(predecessor, float('inf'))+cost for predecessor, cost in zip(predecessors, costs)]
+        # path not found
+        if self.rhs[self.goal] != self.g[self.goal]:
+            return False, [], float('inf'), nodes_expanded
+
+        # back out path
+        node = self.goal
+        path = [self.goal]
+        while node != self.start:
+            predecessors, _ = self.graph.get_predecessors(node)
+            vals = np.array([self.rhs.get(pred, float('inf')) for pred in predecessors])
+            idx = np.argmin(vals)
+            node = predecessors[idx]
+            path.append(node)
+        path.append(self.start)
+        path.reverse()
+
+        return True, path, self.g[self.goal], nodes_expanded
+
+    def _update_node(self, node):
+        if node != self.start:
+            predecessors, costs = self.graph.get_predecessors(node)
+            possible_rhs_vals = [self.rhs.get(pred, float('inf'))+cost for pred, cost in zip(predecessors, costs)]
             self.rhs[node] = min(possible_rhs_vals)
         if self.open_list.contains(node):
             # remove from open list
+            # TODO: get more efficient way to do this
+
+            # decrease key to be the lowest and then remove it
+            # currently runs O(n) in the number of items in queue
             self.open_list.decrease_key(node, (-1, -1))
             self.open_list.get()
-            # TODO: more efficient way to do this?
         if self.g.get(node, float('inf')) != self.rhs.get(node, float('inf')):
             self.open_list.put(node, self._compute_key(node))
 
@@ -203,6 +230,18 @@ class LPAStar(object):
         min_val = min(g, rhs)
         key = (min_val + self.cost_heuristic(node), min_val)
         return key
+
+    def update_node(self, node):
+        """
+        Updates a node for when an edge cost coming into it changes.
+        Call this for every node affected by a change in edge weight 
+        (for directed graphs, just the nodes on the recieving end of an edge are required.)
+        
+        Args:
+            node (object): node to be updated
+        """
+        pass
+
 
 
 
