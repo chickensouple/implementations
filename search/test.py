@@ -37,16 +37,13 @@ def generate_start_and_goal_car(mapgraph):
 
     start = np.random.randint(mapgraph.arr.shape[0], size=(2))
     start_dir = gen_direction()
-    while not check_valid_pos(mapgraph, start) or \
-        not check_valid_pos(mapgraph, start+start_dir):
+    while not check_valid_pos(mapgraph, start):
         start = np.random.randint(mapgraph.arr.shape[0], size=(2))
         start_dir = gen_direction()
 
     goal = np.random.randint(mapgraph.arr.shape[0], size=(2))
     goal_dir = gen_direction()
-    while not check_valid_pos(mapgraph, goal) or \
-        np.all(start == goal) or \
-        not check_valid_pos(mapgraph, goal-goal_dir):
+    while not check_valid_pos(mapgraph, goal) or np.all(start == goal):
         goal = np.random.randint(mapgraph.arr.shape[0], size=(2))
     goal_dir = gen_direction()
 
@@ -61,7 +58,7 @@ if __name__ == '__main__':
     prob_type = 'car' # ['grid', 'car']
 
     seed = np.random.randint(2**31)
-    # seed = 236900777
+    # seed = 1596075529
     np.random.seed(seed)
     print("Seed: " + str(seed))
 
@@ -73,8 +70,7 @@ if __name__ == '__main__':
         m = MapGraphCar(cartype='reed-shepp', size=30, maptype='rooms')
         start, goal = generate_start_and_goal_car(m)
         heuristic = lambda node: cost_heuristic_l2(node[0:2], goal[0:2])
-        # start = (10, 10, 0, 1)
-        # goal = (9, 10, -1, 0)
+        # heuristic = cost_heuristic_none
 
     print("Start: " + str(start))
     print("Goal: " + str(goal))

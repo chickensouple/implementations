@@ -207,6 +207,7 @@ class MapGraphCar(MapGraph):
         neg_pos = (state[0]-state[2], state[1]-state[3], state[2], state[3])
         neg_left_pos = (neg_pos[0]-state[3], neg_pos[1]+state[2], state[3], -state[2])
         neg_right_pos = (neg_pos[0]+state[3], neg_pos[1]-state[2], -state[3], state[2])
+
         # if backward position is valid
         if self._valid_pos(neg_pos):
             neighbors.append(neg_pos)
