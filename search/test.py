@@ -55,42 +55,54 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     from functools import partial
 
-    prob_type = 'car' # ['grid', 'car']
+    # prob_type = 'car' # ['grid', 'car']
+
+    # seed = np.random.randint(2**31)
+    # # seed = 836485953
+    # np.random.seed(seed)
+    # print("Seed: " + str(seed))
+
+    # if prob_type == 'grid':
+    #     m = MapGraph(size=80, maptype='rooms', connectivity=8)
+    #     start, goal = generate_start_and_goal_grid(m)
+    #     heuristic = partial(cost_heuristic_linf, goal=goal)
+    # elif prob_type == 'car':
+    #     m = MapGraphCar(cartype='reed-shepp', size=30, maptype='rooms')
+    #     start, goal = generate_start_and_goal_car(m)
+    #     heuristic = lambda node: cost_heuristic_l2(node[0:2], goal[0:2])
+    #     # heuristic = cost_heuristic_none
+
+    # print("Start: " + str(start))
+    # print("Goal: " + str(goal))
+
+    # path_found, path, cost, nodes_expanded = astar(m, start, goal, heuristic, tie_heuristic=tie_heuristic_high_g)
+
+    # print("Nodes expanded: " + str(nodes_expanded))
+    # if path_found:
+    #     print("Path Found")
+    #     print("Cost: " + str(cost))
+    #     print(path)
+
+    #     m.plot(path)
+    #     plt.show()
+    # else:
+    #     print("Path Not Found")
+
+    #     m.plot()
+    #     plt.scatter(start[1], start[0], c='g')
+    #     plt.scatter(goal[1], goal[0], c='b')
+    #     plt.show()
 
     seed = np.random.randint(2**31)
-    # seed = 1596075529
+    # seed = 0
     np.random.seed(seed)
-    print("Seed: " + str(seed))
+    m = MapGraph(size=80, maptype='rooms', connectivity=4)
+    start, goal = generate_start_and_goal_grid(m)
+    heuristic = partial(cost_heuristic_l2, goal=goal)
+    lpastar = LPAStar(cost_heuristic=heuristic)
 
-    if prob_type == 'grid':
-        m = MapGraph(size=80, maptype='rooms', connectivity=8)
-        start, goal = generate_start_and_goal_grid(m)
-        heuristic = partial(cost_heuristic_linf, goal=goal)
-    elif prob_type == 'car':
-        m = MapGraphCar(cartype='reed-shepp', size=30, maptype='rooms')
-        start, goal = generate_start_and_goal_car(m)
-        heuristic = lambda node: cost_heuristic_l2(node[0:2], goal[0:2])
-        # heuristic = cost_heuristic_none
+    path_found, path, cost, nodes_expanded = astar(m, start, goal, heuristic, tie_heuristic=tie_heuristic_low_g)
+    print("a star nodes: " + str(nodes_expanded))
+    lpastar.search(m, start, goal)
 
-    print("Start: " + str(start))
-    print("Goal: " + str(goal))
-
-    # path_found, path, cost = dijkstra(m, start, goal)
-    path_found, path, cost, nodes_expanded = astar(m, start, goal, heuristic, tie_heuristic=tie_heuristic_high_g)
-
-    print("Nodes expanded: " + str(nodes_expanded))
-    if path_found:
-        print("Path Found")
-        print("Cost: " + str(cost))
-        print(path)
-
-        m.plot(path)
-        plt.show()
-    else:
-        print("Path Not Found")
-
-        m.plot()
-        plt.scatter(start[1], start[0], c='g')
-        plt.scatter(goal[1], goal[0], c='b')
-        plt.show()
 

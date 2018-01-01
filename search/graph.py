@@ -65,7 +65,10 @@ def _generate_rooms(size, nrooms, max_room_size):
 
 
 class GraphBase(object):
-    def get_neighbors(self, node):
+    def get_successors(self, node):
+        raise Exception('Not Implemented')
+
+    def get_predecessors(self, node):
         raise Exception('Not Implemented')
 
     def get_cost(self, node1, node2):
@@ -88,7 +91,7 @@ class MapGraph(GraphBase):
             raise Exception('Connectivity can only be 4 or 8 way')
         self.connectivity = connectivity
 
-    def get_neighbors(self, node):
+    def get_successors(self, node):
         shape = self.arr.shape
         
         neighbors = []
@@ -136,6 +139,9 @@ class MapGraph(GraphBase):
 
         return neighbors, costs
 
+    def get_predecessors(self, node):
+        return self.get_successors(node)
+
     def plot(self, path=None):
         plt.cla()
         plt.imshow(self.arr)
@@ -173,7 +179,7 @@ class MapGraphCar(MapGraph):
                 self.arr[pos[0], pos[1]]==1
         return valid
 
-    def get_neighbors(self, state):
+    def get_successors(self, state):
         forward_pos = (state[0]+state[2], state[1]+state[3], state[2], state[3])
         left_pos = (forward_pos[0]-state[3], forward_pos[1]+state[2], -state[3], state[2])
         right_pos = (forward_pos[0]+state[3], forward_pos[1]-state[2], state[3], -state[2])
