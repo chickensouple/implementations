@@ -97,7 +97,7 @@ def astar(graph, start, goal, cost_heuristic=cost_heuristic_none, tie_heuristic=
 
         # expand node
         for successor, cost in zip(*graph.get_successors(node)):
-            # if we have already explored successor dont add to open list
+            # if we have already explored successor don't add to open list
             if successor in explored:
                 continue
 

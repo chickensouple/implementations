@@ -10,7 +10,6 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 from matplotlib.figure import Figure
 import sys
 import threading
-# from threading import Lock
 import copy
 import signal
 from functools import partial
@@ -236,7 +235,6 @@ class Application(tk.Frame):
         self.path_changed_lock.release()
 
 
-
     def update(self):
         if self.graceful_killer.kill_now:
             exit()
@@ -251,6 +249,7 @@ class Application(tk.Frame):
         if graph_changed or start_goal_changed or path_changed:
             self.draw_map()
 
+            # clear flag to draw path
             self.path_changed_lock.acquire()
             self.path_changed = False
             self.path_changed_lock.release()
@@ -282,8 +281,7 @@ class Application(tk.Frame):
                 self.lpa_thread = threading.Thread(target=self.run_lpa)
                 self.lpa_thread.run()
 
-        
-        self.map_data.clear_flags()
+                self.map_data.clear_flags()
 
         # refresh every 0.05 seconds
         self.after(int(0.05 * 1e3), self.update)
