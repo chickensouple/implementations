@@ -6,129 +6,16 @@ sys.path.append('../')
 from ode import ode_solver_once, ode_solver_once_adaptive
 
 
-def numerical_quadraticization(x0, u0, func):
-    dx = 0.01
-    du = 0.01
-    f0 = func(x0, u0)
-
-    n = len(x0)
-    m = len(u0)
-    lx = np.zeros((n, 1))
-    for i in range(n):
-        vec_dx = np.zeros((n, 1))
-        vec_dx[i] = dx
-        new_f_x = func(x0 + vec_dx, u0) 
-        delta_f_x = (new_f_x - f0) / dx
-        lx[i] = delta_f_x
-
-    lu = np.zeros((m, 1))
-    for i in range(m):
-        vec_du = np.zeros((m, 1))
-        vec_du[i] = du
-        new_f_u = func(x0 + vec_du, u0) 
-        delta_f_u = (new_f_u - f0) / du
-        lu[i] = delta_f_u
-
-    lxx = np.zeros((n, n))
-    for i in range(n):
-        for j in range(i+1):
-            vec_dx1 = np.zeros((n, 1))
-            vec_dx1[i] = dx
-            vec_dx2 = np.zeros((n, 1))
-            vec_dx2[j] = dx
-
-            f_x1_x2 = func(x0 + vec_dx1 + vec_dx2, u0)
-            f_x1 = func(x0 + vec_dx1, u0)
-            f_x2 = func(x0 + vec_dx2, u0)
-
-            delta_f_x = (f_x1_x2 - f_x1 - f_x2 + f0) / (dx*dx)
-
-            lxx[i, j] = delta_f_x
-            lxx[j, i] = delta_f_x
-
-    luu = np.zeros((m, m))
-    for i in range(m):
-        for j in range(i+1):
-            vec_du1 = np.zeros((m, 1))
-            vec_du1[i] = du
-            vec_du2 = np.zeros((m, 1))
-            vec_du2[j] = du
-
-            f_u1_u2 = func(x0, u0 + vec_du1 + vec_du2)
-            f_u1 = func(x0, u0 + vec_du1)
-            f_u2 = func(x0, u0 + vec_du2)
-
-            delta_f_u = (f_u1_u2 - f_u1 - f_u2 + f0) / (du*du)
-
-            luu[i, j] = delta_f_u
-            luu[j, i] = delta_f_u
-
-    lux = np.zeros((m, n))
-    for i in range(m):
-        for j in range(n):
-            vec_du1 = np.zeros((m, 1))
-            vec_du1[i] = du
-            vec_dx2 = np.zeros((n, 1))
-            vec_dx2[j] = dx
-
-            f_u1_x2 = func(x0 + vec_dx2, u0 + vec_du1)
-            f_u1 = func(x0, u0 + vec_du1)
-            f_x2 = func(x0 + vec_dx2, u0)
-
-            delta_f_ux = (f_u1_x2 - f_u1 - f_x2 + f0) / (du*dx)
-
-            lux[i, j] = delta_f_ux
-
-    # print 'f0:', f0
-    # print 'lx:', lx
-    # print 'lu:', lu
-    # print 'lxx:', lxx
-    # print 'luu:', luu
-    # print 'lux:', lux
-
-    return f0, lx, lu, lxx, luu, lux
-
-def numerical_quadraticization2(x0, func):
-    dx = 0.01
-    f0 = func(x0)
-
-    n = len(x0)
-    lx = np.zeros((n, 1))
-    for i in range(n):
-        vec_dx = np.zeros((n, 1))
-        vec_dx[i] = dx
-        new_f_x = func(x0 + vec_dx) 
-        delta_f_x = (new_f_x - f0) / dx
-        lx[i] = delta_f_x
-
-
-    lxx = np.zeros((n, n))
-    for i in range(n):
-        for j in range(i+1):
-            vec_dx1 = np.zeros((n, 1))
-            vec_dx1[i] = dx
-            vec_dx2 = np.zeros((n, 1))
-            vec_dx2[j] = dx
-
-            f_x1_x2 = func(x0 + vec_dx1 + vec_dx2)
-            f_x1 = func(x0 + vec_dx1)
-            f_x2 = func(x0 + vec_dx2)
-
-            delta_f_x = (f_x1_x2 - f_x1 - f_x2 + f0) / (dx*dx)
-
-            lxx[i, j] = delta_f_x
-            lxx[j, i] = delta_f_x
-
-    return f0, lx, lxx
 
 
 
 # differential dynamic programming
+# but actually ilqr
 class DDP(object):
     def __init__(self, sys):
         self.sys = sys
         
-    def solve(self, x0, N, dt, quad_step_cost_func, quad_final_cost_func):
+    def solve(self, x0, N, dt, quad_step_cost_func, quad_final_cost_func, niter=50):
         n = len(x0)
         m = 1
 
@@ -137,7 +24,7 @@ class DDP(object):
         x_list[0] = x0
         u_list = [np.zeros((m, 1)) for _ in range(N)]
 
-        for i in range(50):
+        for i in range(niter):
             x_list, u_list = self._forward_pass(x_list, u_list, controller_list, dt)
             controller_list = self._backward_pass(x_list, u_list, dt, quad_step_cost_func, quad_final_cost_func)
             
@@ -194,7 +81,6 @@ class DDP(object):
             j = -np.linalg.solve(quu, qu)
             A = qxx + np.dot(K.T, np.dot(quu, K)) + np.dot(qux.T, K) + np.dot(K.T, qux)
             b = qx + np.dot(K.T, np.dot(quu, j)) + np.dot(qux.T, j) + np.dot(K.T, qu)
-            
 
             controller_list.append((K, j))
 
@@ -248,8 +134,6 @@ if __name__ == '__main__':
         return f0, lx, lu, lxx, luu, lux
 
 
-
-
     target_state = np.array([[0, 0.]]).T
     target_control = np.array([[0.]])
     step_cost_func = partial(step_cost, target_state=target_state, target_control=target_control)
@@ -257,8 +141,6 @@ if __name__ == '__main__':
 
     final_cost_func = partial(final_cost, target_state=target_state)
     quad_final_cost_func = partial(quad_final_cost, target_state=target_state)
-
-
 
     dt = 0.05
     x0 = np.array([[math.pi, 0.]]).T
@@ -335,4 +217,112 @@ if __name__ == '__main__':
     # plt.show()
 
 
+
+
+
+
+# def numerical_quadraticization(x0, u0, func, dx=0.01, dt=0.01):
+#     f0 = func(x0, u0)
+
+#     n = len(x0)
+#     m = len(u0)
+#     lx = np.zeros((n, 1))
+#     for i in range(n):
+#         vec_dx = np.zeros((n, 1))
+#         vec_dx[i] = dx
+#         new_f_x = func(x0 + vec_dx, u0) 
+#         delta_f_x = (new_f_x - f0) / dx
+#         lx[i] = delta_f_x
+
+#     lu = np.zeros((m, 1))
+#     for i in range(m):
+#         vec_du = np.zeros((m, 1))
+#         vec_du[i] = du
+#         new_f_u = func(x0 + vec_du, u0) 
+#         delta_f_u = (new_f_u - f0) / du
+#         lu[i] = delta_f_u
+
+#     lxx = np.zeros((n, n))
+#     for i in range(n):
+#         for j in range(i+1):
+#             vec_dx1 = np.zeros((n, 1))
+#             vec_dx1[i] = dx
+#             vec_dx2 = np.zeros((n, 1))
+#             vec_dx2[j] = dx
+
+#             f_x1_x2 = func(x0 + vec_dx1 + vec_dx2, u0)
+#             f_x1 = func(x0 + vec_dx1, u0)
+#             f_x2 = func(x0 + vec_dx2, u0)
+
+#             delta_f_x = (f_x1_x2 - f_x1 - f_x2 + f0) / (dx*dx)
+
+#             lxx[i, j] = delta_f_x
+#             lxx[j, i] = delta_f_x
+
+#     luu = np.zeros((m, m))
+#     for i in range(m):
+#         for j in range(i+1):
+#             vec_du1 = np.zeros((m, 1))
+#             vec_du1[i] = du
+#             vec_du2 = np.zeros((m, 1))
+#             vec_du2[j] = du
+
+#             f_u1_u2 = func(x0, u0 + vec_du1 + vec_du2)
+#             f_u1 = func(x0, u0 + vec_du1)
+#             f_u2 = func(x0, u0 + vec_du2)
+
+#             delta_f_u = (f_u1_u2 - f_u1 - f_u2 + f0) / (du*du)
+
+#             luu[i, j] = delta_f_u
+#             luu[j, i] = delta_f_u
+
+#     lux = np.zeros((m, n))
+#     for i in range(m):
+#         for j in range(n):
+#             vec_du1 = np.zeros((m, 1))
+#             vec_du1[i] = du
+#             vec_dx2 = np.zeros((n, 1))
+#             vec_dx2[j] = dx
+
+#             f_u1_x2 = func(x0 + vec_dx2, u0 + vec_du1)
+#             f_u1 = func(x0, u0 + vec_du1)
+#             f_x2 = func(x0 + vec_dx2, u0)
+
+#             delta_f_ux = (f_u1_x2 - f_u1 - f_x2 + f0) / (du*dx)
+
+#             lux[i, j] = delta_f_ux
+
+#     return f0, lx, lu, lxx, luu, lux
+
+# def numerical_quadraticization2(x0, func, dx=0.01):
+#     f0 = func(x0)
+
+#     n = len(x0)
+#     lx = np.zeros((n, 1))
+#     for i in range(n):
+#         vec_dx = np.zeros((n, 1))
+#         vec_dx[i] = dx
+#         new_f_x = func(x0 + vec_dx) 
+#         delta_f_x = (new_f_x - f0) / dx
+#         lx[i] = delta_f_x
+
+
+#     lxx = np.zeros((n, n))
+#     for i in range(n):
+#         for j in range(i+1):
+#             vec_dx1 = np.zeros((n, 1))
+#             vec_dx1[i] = dx
+#             vec_dx2 = np.zeros((n, 1))
+#             vec_dx2[j] = dx
+
+#             f_x1_x2 = func(x0 + vec_dx1 + vec_dx2)
+#             f_x1 = func(x0 + vec_dx1)
+#             f_x2 = func(x0 + vec_dx2)
+
+#             delta_f_x = (f_x1_x2 - f_x1 - f_x2 + f0) / (dx*dx)
+
+#             lxx[i, j] = delta_f_x
+#             lxx[j, i] = delta_f_x
+
+#     return f0, lx, lxx
 

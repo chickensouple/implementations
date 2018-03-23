@@ -1,7 +1,12 @@
 import numpy as np
-import sys
-sys.path.append('../')
-from ode import ode_solver_once, ode_solver_once_adaptive
+try:
+    # for when this file is imported outside of the top level package
+    from .. ode import ode_solver_once, ode_solver_once_adaptive
+except:
+    # for when this file is imported from another subpackage
+    import sys
+    sys.path.append('../')
+    from ode import ode_solver_once, ode_solver_once_adaptive
 
 class ModelBase(object):
     """

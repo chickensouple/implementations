@@ -1,6 +1,6 @@
 import numpy as np
-from model_base import ModelBase
-from lti_system import LTISystem
+from . model_base import ModelBase
+from . lti_system import LTISystem
 
 class DoubleIntegrator(LTISystem):
     """
@@ -31,13 +31,13 @@ if __name__ == '__main__':
     test = env.get_linearized_system(x0, u0)
     
 
-    print "base:", base
-    print "A:", A
-    print "B:", B
+    print("base: " + str(base))
+    print("A: " + str(A))
+    print("B: " + str(B))
 
     A, B = env.discretize(0.1)
-    print "A:", A
-    print "B:", B
+    print("A: " + str(A))
+    print("B: " + str(B))
 
     
     # import matplotlib.pyplot as plt

@@ -1,6 +1,6 @@
 import numpy as np
 import math
-from pid import PID
+from . pid import PID
 
 class PendulumEnergySwingup(object):
     def __init__(self, E0, kp, ki=0, kd=0):
