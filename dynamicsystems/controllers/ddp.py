@@ -140,16 +140,19 @@ class DDP(object):
         for i in range(50):
             x_list, u_list = self._forward_pass(x_list, u_list, controller_list, dt)
             controller_list = self._backward_pass(x_list, u_list, dt, quad_step_cost_func, quad_final_cost_func)
-            # x_arr = np.array(x_list)
-            # t = np.ones(N+1) * dt
-            # t = np.cumsum(t)
-            # plt.cla()
-            # plt.plot(t, x_arr[:, 0], label='theta', c='b')
-            # plt.plot(t, x_arr[:, 1], label='theta_dot', c='r')
-            # plt.legend()
-            # plt.show(block=False)
-            # plt.pause(0.01)
-            # raw_input('Press Enter to Continue: ')
+            
+
+
+            x_arr = np.array(x_list)
+            t = np.ones(N+1) * dt
+            t = np.cumsum(t)
+            plt.cla()
+            plt.plot(t, x_arr[:, 0], label='theta', c='b')
+            plt.plot(t, x_arr[:, 1], label='theta_dot', c='r')
+            plt.legend()
+            plt.show(block=False)
+            plt.pause(0.01)
+            raw_input('Press Enter to Continue: ')
 
         return controller_list, x_list, u_list
 
@@ -206,8 +209,8 @@ if __name__ == '__main__':
 
 
     Cx = np.array([[100., 0], [0, 1]])
-    # Cu = np.array([[490.]])
-    Cu = np.array([[0.01]])
+    Cu = np.array([[490.]])
+    # Cu = np.array([[0.01]])
 
     def final_cost(x, target_state, Cx=Cx):
         delta_x = x - target_state
@@ -264,72 +267,72 @@ if __name__ == '__main__':
     ddp = DDP(pendulum)
 
 
-    # # open loop controller
-    # N = 500
-    # controller_list, x_list, u_list = ddp.solve(x0, N, dt, quad_step_cost_func, quad_final_cost_func)
+    # open loop controller
+    N = 500
+    controller_list, x_list, u_list = ddp.solve(x0, N, dt, quad_step_cost_func, quad_final_cost_func)
     
-    # states = np.zeros((2, N-1))
-    # controls = np.zeros(N-1)
-    # for i in range(N-1):
-    #     state = pendulum.get_state()
-    #     states[:, i] = state.squeeze()
-
-    #     controller = controller_list[0]
-    #     u = np.dot(controller[0], state - x_list[0]) + controller[1] + u_list[0]
-    #     # u = u_list[0]
-
-    #     pendulum.step(u)
-    #     controls[i] = u.squeeze()
-
-    # t = np.ones(N-1) * dt
-    # t = np.cumsum(t)
-    # plt.plot(t, states[0, :], label='theta')
-    # plt.plot(t, states[1, :], label='theta_dot')
-    # plt.plot(t, controls, label='control')
-    # plt.legend()
-    # plt.show()
-
-    # # plotting original ddp solution
-    # t = np.ones(N) * dt
-    # t = np.cumsum(t)
-    # x_arr = np.array(x_list).squeeze()
-    # plt.plot(t, x_arr[:-1, 0], label='theta')
-    # plt.plot(t, x_arr[:-1, 1], label='theta_dot')
-    # plt.plot(t, np.array(u_list).squeeze(), label='control')
-    # plt.legend()
-    # plt.show()
-    # exit()
-
-
-    # closed loop control
-    N = 30
-    ddp_horizon = 20
     states = np.zeros((2, N-1))
     controls = np.zeros(N-1)
     for i in range(N-1):
-        print i
         state = pendulum.get_state()
         states[:, i] = state.squeeze()
 
-        controller_list, x_list, u_list = ddp.solve(x0, ddp_horizon, dt, quad_step_cost_func, quad_final_cost_func)
         controller = controller_list[0]
         u = np.dot(controller[0], state - x_list[0]) + controller[1] + u_list[0]
+        # u = u_list[0]
 
         pendulum.step(u)
         controls[i] = u.squeeze()
 
-
     t = np.ones(N-1) * dt
     t = np.cumsum(t)
-
-
-
     plt.plot(t, states[0, :], label='theta')
     plt.plot(t, states[1, :], label='theta_dot')
     plt.plot(t, controls, label='control')
-
     plt.legend()
     plt.show()
+
+    # plotting original ddp solution
+    t = np.ones(N) * dt
+    t = np.cumsum(t)
+    x_arr = np.array(x_list).squeeze()
+    plt.plot(t, x_arr[:-1, 0], label='theta')
+    plt.plot(t, x_arr[:-1, 1], label='theta_dot')
+    plt.plot(t, np.array(u_list).squeeze(), label='control')
+    plt.legend()
+    plt.show()
+    exit()
+
+
+    # # closed loop control
+    # N = 30
+    # ddp_horizon = 20
+    # states = np.zeros((2, N-1))
+    # controls = np.zeros(N-1)
+    # for i in range(N-1):
+    #     print i
+    #     state = pendulum.get_state()
+    #     states[:, i] = state.squeeze()
+
+    #     controller_list, x_list, u_list = ddp.solve(x0, ddp_horizon, dt, quad_step_cost_func, quad_final_cost_func)
+    #     controller = controller_list[0]
+    #     u = np.dot(controller[0], state - x_list[0]) + controller[1] + u_list[0]
+
+    #     pendulum.step(u)
+    #     controls[i] = u.squeeze()
+
+
+    # t = np.ones(N-1) * dt
+    # t = np.cumsum(t)
+
+
+
+    # plt.plot(t, states[0, :], label='theta')
+    # plt.plot(t, states[1, :], label='theta_dot')
+    # plt.plot(t, controls, label='control')
+
+    # plt.legend()
+    # plt.show()
 
 
 

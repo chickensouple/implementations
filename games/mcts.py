@@ -63,9 +63,14 @@ class MonteCarloTreeSearch(object):
 		self.N = 0
 		self.simulate()
 
-	def simulate(self):
+	def simulate(self, root_idx):
 		# tree policy
-		tree_idx = 0
+		tree_idx = root_idx
+
+        # get current player
+        game_state, _, _ = self.tree.get_node_info(tree_idx)
+        self.game.set_state(game_state)
+        curr_player = self.game.get_curr_player()
 
 		child_indices = self.tree.p_c_edges[tree_idx]
 		while len(child_indices) != 0:
@@ -90,7 +95,10 @@ class MonteCarloTreeSearch(object):
 
 		# choose random node to expand
 		tree_idx = np.random.choice(self.tree.p_c_edges[tree_idx])
+        self.rollout(tree_idx)
 
+
+    def rollout(self, tree_idx, curr_player):
 		# fast policy rollout
 		game_state, _, _ = self.tree.get_node_info(tree_idx)
 		self.game.set_state(game_state)
@@ -100,6 +108,17 @@ class MonteCarloTreeSearch(object):
 			action = actions[action_idx]
 			self.game.step(action)
 
+
+        winner = self.game.get_winner()
+        if winner == curr_player:
+            # win
+            val = 1
+        elif winner == -1:
+            # tie
+            val = 0
+        else:
+            #loss
+            val = -1
 		
 
 

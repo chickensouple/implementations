@@ -4,6 +4,8 @@ Utilities for reinforcement learning algorithms
 import time
 import numpy as np
 import scipy.signal
+import copy
+import math
 
 def rollout(env, policy, get_state, max_iter=10000, render=False):
     """
@@ -46,7 +48,7 @@ def single_test(env, method, get_state, num_episodes):
     for i in range(num_episodes):
         total_reward = method.update(env, get_state)
         print("Iteration " + str(i) + " reward: " + str(total_reward))
-        if i % 100 == 0:
+        if i % 500 == 0:
             [_, _, rewards] = rollout(env, method.curr_policy(), get_state, render=True)
             total_reward = np.sum(np.array(rewards))
             print("Test reward: " + str(total_reward))
@@ -70,8 +72,9 @@ class LinearAnnealing(object):
             self.eps -= (self.start_eps - self.end_eps) / self.num_steps
 
 
-def TabularSoftmaxPolicy(theta, state):
-    row = theta[state, :]
+def TabularSoftmaxPolicy(theta, state, temperature=1):
+    row = copy.deepcopy(theta[state, :])
+    row = row / temperature
     probs = np.exp(row - np.max(row))
     probs /= np.sum(probs)
 
@@ -165,6 +168,23 @@ def obs_to_state(num_states, lower_bounds, upper_bounds, obs):
         state_idx.append(discretize_val(ob, lower, upper, num))
 
     return np.ravel_multi_index(state_idx, num_states)
+
+
+def acrobot_obs_to_state(num_states, upper_bounds, lower_bounds, obs):
+    state_idx = []
+
+    angle1 = math.atan2(obs[1], obs[0])
+    angle2 = math.atan2(obs[3], obs[2])
+
+    angle_idx1 = int((angle1 + math.pi) * num_states[0] / (math.pi * 2))
+    angle_idx2 = int((angle2 + math.pi) * num_states[1] / (math.pi * 2))
+    state_idx.append(angle_idx1)
+    state_idx.append(angle_idx2)
+    state_idx.append(discretize_val(obs[4], lower_bounds[0], upper_bounds[0], num_states[2]))
+    state_idx.append(discretize_val(obs[5], lower_bounds[1], upper_bounds[1], num_states[3]))
+
+    return np.ravel_multi_index(state_idx, num_states)
+
 
 def get_discounted_rewards(rewards, gamma):
     """

@@ -8,7 +8,7 @@ import gym
 
 
 class TabularTD(object):
-	def __init__(self, num_states, num_actions, lambd=0, qlearning=True, replaytrace=True, online=False, gamma=1, alpha=0.5, eps=0.1, eps_decay=0.9999):
+	def __init__(self, num_states, num_actions, lambd=0, qlearning=True, replaytrace=True, online=False, gamma=1, alpha=0.5, alpha_decay=1, eps=0.1, eps_decay=0.9999):
 		self.num_states = num_states
 		self.num_actions = num_actions
 		self.lambd = lambd
@@ -17,6 +17,7 @@ class TabularTD(object):
 		self.online = online
 
 		self.alpha = alpha
+		self.alpha_decay = alpha_decay
 		self.gamma = gamma 
 		self.start_eps = eps
 		self.eps_decay = eps_decay
@@ -76,7 +77,6 @@ class TabularTD(object):
 					td_error = reward + (self.gamma * np.max(self.Q[next_state, :])) - self.Q[state, action]
 				else:
 					td_error = reward + (self.gamma * self.Q[next_state, next_action]) - self.Q[state, action]
-			
 
 
 			if self.replaytrace:
@@ -109,26 +109,36 @@ class TabularTD(object):
 			self.Q += total_delta_Q
 
 		self.eps *= self.eps_decay
+		self.alpha *= self.alpha_decay
 
 		return total_reward
 
 if __name__ == '__main__':
-	env = gym.make('CartPole-v0')
+	# env = gym.make('CartPole-v0')
+	# num_actions = env.action_space.n
+	# num_states = [1, 8, 8, 8]
+	
+	# state_len = np.prod(np.array(num_states))
+	# lower_bounds = [-4.8, -3, -0.418, -2]
+	# upper_bounds = [4.8, 3, 0.418, 2]
+
+	# get_state = partial(obs_to_state, num_states, lower_bounds, upper_bounds)
+
+	# sarsa = TabularTD(state_len, num_actions, alpha=0.5, lambd=0, replaytrace=False, qlearning=False, online=True)
+	# qlearning = TabularTD(state_len, num_actions, alpha=0.5, lambd=0, replaytrace=False, qlearning=True, online=True)
+	# qlearning_replay = TabularTD(state_len, num_actions, alpha=0.5, lambd=0, replaytrace=True, qlearning=True, online=True, eps_decay=0.99)
+	# tdlambda = TabularTD(state_len, num_actions, alpha=0.5, lambd=0.8, replaytrace=True, qlearning=True, online=True, eps_decay=0.99)
+	
+
+	# single_test(env, tdlambda, get_state, 20000)
+	env = gym.make('Acrobot-v1')
 	num_actions = env.action_space.n
-	num_states = [1, 8, 8, 8]
-	
+	num_states = [9, 9, 6, 6]
 	state_len = np.prod(np.array(num_states))
-	lower_bounds = [-4.8, -3, -0.418, -2]
-	upper_bounds = [4.8, 3, 0.418, 2]
+	get_state = partial(acrobot_obs_to_state, num_states, [-6, -6], [6, 6])
+	qlearning = TabularTD(state_len, num_actions, alpha=0.7, alpha_decay=0.999, lambd=0.5, replaytrace=True, qlearning=True, online=True, eps=1, eps_decay=0.99)
 
-	get_state = partial(obs_to_state, num_states, lower_bounds, upper_bounds)
+	single_test(env, qlearning, get_state, 20000)
 
-	sarsa = TabularTD(state_len, num_actions, alpha=0.5, lambd=0, replaytrace=False, qlearning=False, online=True)
-	qlearning = TabularTD(state_len, num_actions, alpha=0.5, lambd=0, replaytrace=False, qlearning=True, online=True)
-	qlearning_replay = TabularTD(state_len, num_actions, alpha=0.5, lambd=0, replaytrace=True, qlearning=True, online=True, eps_decay=0.99)
-	tdlambda = TabularTD(state_len, num_actions, alpha=0.5, lambd=0.8, replaytrace=True, qlearning=True, online=True, eps_decay=0.99)
-	
-
-	single_test(env, tdlambda, get_state, 20000)
 
 
