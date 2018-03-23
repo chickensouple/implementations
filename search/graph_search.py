@@ -165,14 +165,15 @@ class LPAStar(object):
         self.g[self.start] = float('inf')
         self.g[self.goal] = float('inf')
 
-    def update_graph(self, graph):
-        self.graph = graph
-
-    def search(self):
         # add start node to open list
         h = self.cost_heuristic(self.start)
         self.open_list.put(self.start, (h, 0))
 
+
+    def update_graph(self, graph):
+        self.graph = graph
+
+    def search(self):
         # node expansions
         nodes_expanded = 0
         while not self.open_list.empty() and \

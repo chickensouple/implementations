@@ -20,8 +20,8 @@ class SimpleCar(ModelBase):
         
         Args:
             length (float, optional): front wheel to back wheel distance (default: 1)
-            max_accel (float, optional): maximum acceleration of car in m/s/s
-            max_turn (TYPE, optional): maximum turn angle of car in rad
+            max_accel (float, optional): maximum acceleration of car in m/s/s (default: 1)
+            max_turn (TYPE, optional): maximum turn angle of car in rad (default: pi/3)
             **kwargs: Description
         """
         control_limits = [np.array([-max_accel, -max_turn]), np.array([max_accel, max_turn])]
