@@ -2,6 +2,8 @@ import queue
 from heuristics import cost_heuristic_none, tie_heuristic_none, tie_heuristic_high_g
 import heapq
 import numpy as np
+import time
+import copy
 
 class OpenList(object):
     def __init__(self):
@@ -41,6 +43,10 @@ class OpenList(object):
         self.heap[idx] = (new_priority, item)
         self.heap_dict[item] = new_priority
         heapq._siftdown(self.heap, 0, idx)
+
+
+
+
 
 
 def astar(graph, start, goal, cost_heuristic=cost_heuristic_none, tie_heuristic=tie_heuristic_high_g):
@@ -250,6 +256,129 @@ class LPAStar(object):
         self._update_node(node)
 
 
+
+class ARAStar(object):
+    def __init__(self, graph, start, goal, cost_heuristic=cost_heuristic_none):
+        """
+        Sets up basic options for ARA* search
+        cost_heuristic is the guiding heuristic (h value) used in ARA*.
+        By default, it is the zero function, which will just perform djikstra's algorithm
+
+        Args:
+            cost_heuristic (func, optional): function that takes in (current_node, goal_node) and returns a scalar
+        """
+        self.cost_heuristic = cost_heuristic
+        self.graph = graph
+        self.start = start
+        self.goal = goal
+        self.reset()
+
+    def fvalue(self, state):
+        g = self.g.get(state, float('inf'))
+
+        return g + self.epsilon * self.cost_heuristic(state)
+
+    def reset(self):
+        # Initialize Sets
+        self.g = dict()
+        self.open_list = OpenList()
+        self.closed_list = set()
+        self.incons_list = set()
+
+        # Set start and goal costs
+
+        self.g[self.start] = 0.0
+        self.g[self.goal] = float('inf')
+
+
+
+    def improve_path(self, epsilon):
+
+        while True:
+            if self.open_list.empty():
+                break
+
+            if self.fvalue(self.goal) <= self.open_list.peek()[0]:
+                break
+
+        # while self.fvalue(self.goal) > self.open_list.peek()[0]:
+
+            s = self.open_list.get()
+            self.closed_list.add(s)
+            for successor, cost in zip(*self.graph.get_successors(s)):
+                if self.g.get(successor, float('inf')) > self.g.get(s, float('inf')) + cost:
+                    self.g[successor] = self.g.get(s, float('inf')) + cost
+                    if successor in self.closed_list:
+                        self.incons_list.add(successor)
+                    else: # Inserting into Open List
+                        if self.open_list.contains(successor):
+                            self.open_list.decrease_key(successor, self.fvalue(successor))
+                        else:
+                            self.open_list.put(successor, self.fvalue(successor))
+
+
+    def backout_path(self):
+
+        if self.g.get(self.goal, float('inf')) == float('inf'):
+            return False, [], float('inf'), 0
+
+        # back out path
+        node = self.goal
+        path = [self.goal]
+        while node != self.start:
+            predecessors, _ = self.graph.get_predecessors(node)
+            vals = np.array([self.g.get(pred, float('inf')) for pred in predecessors])
+            idx = np.argmin(vals)
+            node = predecessors[idx]
+            path.append(node)
+        path.append(self.start)
+        path.reverse()
+
+        return True, path, self.g[self.goal], 0
+
+
+
+    def search(self, time_s):
+
+
+        self.reset()
+        # node expansions
+        nodes_expanded = 0
+        self.epsilon = 3
+
+        # Insert start into Open
+        self.open_list.put(self.start, self.fvalue(self.start))
+
+        start_time = time.clock()
+        self.improve_path(self.epsilon)
+        elapsed = time.clock() - start_time
+
+        while self.epsilon > 1 and elapsed < time_s:
+
+            self.epsilon -= .05
+            # Update priorities for everything in OPEN
+
+            # TODO: make this less hacky
+            # copying over dict of everything in open list
+            # and reinserting with new priority
+            open_list_dict = copy.deepcopy(self.open_list.heap_dict)
+            self.open_list = OpenList()
+
+            for state, _ in open_list_dict.iteritems():
+                self.open_list.put(state, self.fvalue(state))
+
+            # Move states from INCOS to Open
+            for s in self.incons_list:
+                self.open_list.put(s, self.fvalue(s))
+            self.incons_list = set()
+
+            self.closed_list = set()
+            self.improve_path(self.epsilon)
+            elapsed = time.clock() - start_time
+
+
+        print 'ARA* Time Elapsed: ', elapsed
+        return self.backout_path()
 
 
 

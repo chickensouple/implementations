@@ -14,6 +14,7 @@ def generate_start_and_goal_grid(mapgraph):
     while not check_valid_pos(mapgraph, start):
         start = np.random.randint(mapgraph.arr.shape[0], size=(2))
 
+
     goal = np.random.randint(mapgraph.arr.shape[0], size=(2))
     while not check_valid_pos(mapgraph, goal) or np.all(start == goal):
         goal = np.random.randint(mapgraph.arr.shape[0], size=(2))
@@ -57,7 +58,8 @@ if __name__ == '__main__':
     prob_type = 'grid' # ['grid', 'car']
 
     seed = np.random.randint(2**31)
-    seed = 836485953
+    seed = 684468469
+    # seed = 2010841075 # TODO: car seed bad
     np.random.seed(seed)
     print("Seed: " + str(seed))
 
@@ -70,13 +72,24 @@ if __name__ == '__main__':
         start, goal = generate_start_and_goal_car(m)
         heuristic = lambda node: cost_heuristic_l2(node[0:2], goal[0:2])
         # heuristic = cost_heuristic_none
+    elif prob_type == 'aratest':
+        m = MapGraph(maptype='aratest', connectivity=8)
+        start = (0, 0)
+        goal = (6, 5)
+        heuristic = partial(cost_heuristic_linf, goal=goal)
+    elif prob_type == 'cartest':
+        m = MapGraphCar(cartype='dubins', maptype='cartest')
+        start = (0, 16, 0, -1)
+        goal = (0, 16, 0, 1)
+        heuristic = partial(cost_heuristic_linf, goal=goal)
 
-    print("Start: " + str(start))
-    print("Goal: " + str(goal))
 
     # path_found, path, cost, nodes_expanded = astar(m, start, goal, heuristic, tie_heuristic=tie_heuristic_high_g)
-    lpastar = LPAStar(m, start, goal, cost_heuristic=heuristic)
-    path_found, path, cost, nodes_expanded = lpastar.search()
+    #lpastar = LPAStar(m, start, goal, cost_heuristic=heuristic)
+    #path_found, path, cost, nodes_expanded = lpastar.search()
+    arastar = ARAStar(m, start, goal, cost_heuristic=heuristic)
+    path_found, path, cost, nodes_expanded = arastar.search(1)
+
 
     print("Nodes expanded: " + str(nodes_expanded))
     if path_found:
@@ -90,8 +103,8 @@ if __name__ == '__main__':
         print("Path Not Found")
 
         m.plot()
-        plt.scatter(start[1], start[0], c='g')
-        plt.scatter(goal[1], goal[0], c='b')
+        plt.scatter(start[0], start[1], c='g')
+        plt.scatter(goal[0], goal[1], c='b')
         plt.show()
 
 

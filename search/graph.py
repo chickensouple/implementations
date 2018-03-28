@@ -84,6 +84,21 @@ class MapGraph(GraphBase):
         elif maptype == 'rooms':
             nrooms = int(size / 5)
             self.arr = _generate_rooms(size, nrooms, int(math.pow(size/1.2, 0.8)))
+        elif maptype == 'aratest':
+            self.arr = np.ones((7, 6))
+            self.arr[1:3, 0] = 0
+            self.arr[-1, 0:5] = 0
+            self.arr[4:6, -2] = 0
+            self.arr[4, 1] = 0
+            self.arr[1:5, 2] = 0
+            self.arr[1:3, 3:5] = 0
+        elif maptype == 'cartest':
+            self.arr = np.ones((10, 18))
+            self.arr[0:2, 6:-3] = 0
+            self.arr[3:-1, 6:-1] = 0
+
+
+
         else:
             raise Exception('Invalid maptype')
 
