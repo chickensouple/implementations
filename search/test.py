@@ -58,7 +58,7 @@ if __name__ == '__main__':
     prob_type = 'grid' # ['grid', 'car']
 
     seed = np.random.randint(2**31)
-    seed = 684468469
+    #seed = 684468469
     # seed = 2010841075 # TODO: car seed bad
     np.random.seed(seed)
     print("Seed: " + str(seed))
@@ -87,8 +87,9 @@ if __name__ == '__main__':
     # path_found, path, cost, nodes_expanded = astar(m, start, goal, heuristic, tie_heuristic=tie_heuristic_high_g)
     #lpastar = LPAStar(m, start, goal, cost_heuristic=heuristic)
     #path_found, path, cost, nodes_expanded = lpastar.search()
-    arastar = ARAStar(m, start, goal, cost_heuristic=heuristic)
-    path_found, path, cost, nodes_expanded = arastar.search(1)
+    #arastar = ARAStar(m, start, goal, cost_heuristic=heuristic)
+    adstar = ADStar(m, start, goal, cost_heuristic=heuristic)
+    path_found, path, cost, nodes_expanded = adstar.compute_path(100)
 
 
     print("Nodes expanded: " + str(nodes_expanded))

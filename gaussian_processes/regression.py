@@ -107,7 +107,7 @@ if __name__ == '__main__':
     plt.ylabel('$f(x)$')
     plt.title('Linear Regression with Gaussian Processes')
 
-   # plt.legend(loc='upper left')
+    plt.legend(loc='upper left')
     # TODO Fix labeling
 
     plt.show()

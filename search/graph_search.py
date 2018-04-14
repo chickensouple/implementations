@@ -18,6 +18,9 @@ class OpenList(object):
         _, item = heapq.heappop(self.heap)
         self.heap_dict.pop(item)
         return item
+    def remove(self, item):
+        self.decrease_key(item, (-float('inf'), -float('inf')))
+        self.get()
 
     def peek(self):
         return self.heap[0]
@@ -226,13 +229,7 @@ class LPAStar(object):
             else:
                 self.rhs[node] = min(possible_rhs_vals)
         if self.open_list.contains(node):
-            # remove from open list
-            # TODO: get more efficient way to do this
-
-            # decrease key to be the lowest and then remove it
-            # currently runs O(n) in the number of items in queue
-            self.open_list.decrease_key(node, (-1, -1))
-            self.open_list.get()
+            self.open_list.remove(node)
         if self.g.get(node, float('inf')) != self.rhs.get(node, float('inf')):
             self.open_list.put(node, self._compute_key(node))
 
@@ -381,6 +378,147 @@ class ARAStar(object):
         return self.backout_path()
 
 
+
+class ADStar(object):
+    def __init__(self, graph, start, goal, cost_heuristic=cost_heuristic_none):
+        """
+        Sets up basic options for ARA* search
+        cost_heuristic is the guiding heuristic (h value) used in AD*.
+        By default, it is the zero function, which will just perform djikstra's algorithm
+
+        Args:
+            cost_heuristic (func, optional): function that takes in (current_node, goal_node) and returns a scalar
+        """
+
+        self.cost_heuristic = cost_heuristic
+        self.graph = graph
+        self.start = start
+        self.goal = goal
+        self.reset()
+
+    def reset(self):
+        # Initialize Sets
+        self.open_list = OpenList()
+        self.closed_list = set()
+        self.incons_list = set()
+
+        # Initialize Costs and Back pointers
+        self.bp = dict()
+        self.g = dict()
+        self.v = dict()
+
+        # set initial g,v values
+        self.g[self.start] = 0
+        self.g[self.goal] = float('inf')
+
+        self.v[self.start] = float('inf')
+        self.v[self.goal] = float('inf')
+        self.bp[self.start] = None
+        self.bp[self.goal] = None
+        self.epsilon = 1
+
+        # add start node to open list
+        h = self.cost_heuristic(self.start)
+        self.open_list.put(self.start, (h, 0))
+
+
+
+
+    def key(self, state):
+        v = self.v.get(state,float('inf'))
+        g = self.g.get(state,float('inf'))
+        if (v >= g):
+            return g + self.epsilon * self.cost_heuristic(state), g
+        else:
+            return v + self.cost_heuristic(state), v
+
+    def update_graph(self, graph):
+        self.graph = graph
+
+    def update_set_membership(self, state):
+        if self.v[state] != self.g[state]:
+            if state not in self.closed_list: # If not closed, insert or update key in open
+                if self.open_list.contains(state):
+                    self.open_list.decrease_key(state, self.key(state))
+                else:
+                    self.open_list.put(state, self.key(state))
+            elif state not in self.incons_list:
+                self.incons_list.add(state)
+        else:
+            if self.open_list.contains(state):
+                self.open_list.remove(state) # lolz
+            elif state in self.incons_list:
+                self.incons_list.remove(state)
+
+    def compute_path(self, epsilon):
+
+        self.epsilon = epsilon
+        while True:
+            if self.open_list.empty():
+                break # No path exists
+
+            if self.key(self.goal) <= self.open_list.peek()[0] and (self.v[self.goal] >= self.g[self.goal]):
+                 break
+
+            s = self.open_list.get() # Min element from Open
+
+            # IF overconsistent
+            if self.v[s] > self.g[s]:
+                self.v[s] = self.g[s]
+                # Add to closed list
+                self.closed_list.add(s)
+                for successor, cost in zip(*self.graph.get_successors(s)):
+                    # IF have never seen this
+                    if not self.g.has_key(successor):
+                        self.v[successor] = self.g[successor] = float('inf')
+                        self.bp[successor] = None
+                    if self.g[successor] > self.g[s] + cost:
+                        self.bp[successor] = s
+                        self.g[successor] = self.g[s] + cost
+                        self.update_set_membership(successor)
+            else: # Propagating underconsistency
+                print 'derpy derpy derp'
+                self.v[s] = float('inf')
+                self.update_set_membership(s)
+                for successor, cost in zip(*self.graph.get_successors(s)):
+                    if not self.g.has_key(successor):
+                        self.v[successor] = self.g[successor] = float('inf')
+                        self.bp[successor] = None
+                    if self.bp[successor] == s:
+                        self.update_best_pred(successor)
+                        self.update_set_membership(successor)
+
+
+
+        path = []
+        curr_node = self.goal
+        while (curr_node is not None):
+            path.append(curr_node)
+            curr_node = self.bp[curr_node]
+
+        path.reverse()
+        nodes_expanded = 0
+        return True, path, self.g[self.goal], nodes_expanded
+
+
+
+    # Call update graph before calling this
+    def update_node(self, node):
+        if node != self.start and self.g.has_key(node):
+            self.update_best_pred(node); self.update_set_membership(node)
+
+
+    def update_best_pred(self, node):
+        # Check all predecessors of successor::
+        min_pred = None
+        min_cost = float('inf')
+        for pred, cost in zip(*self.graph.get_predecessors(node)):
+            g_val = self.v[pred] + cost
+            if g_val < min_cost:
+                min_pred = pred
+                min_cost = g_val
+        self.bp[node] = min_pred
+        self.g[node] = min_cost
 
 
 if __name__ == '__main__':
