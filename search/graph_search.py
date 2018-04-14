@@ -513,7 +513,7 @@ class ADStar(object):
         min_pred = None
         min_cost = float('inf')
         for pred, cost in zip(*self.graph.get_predecessors(node)):
-            g_val = self.v[pred] + cost
+            g_val = self.v.get(pred, float('inf')) + cost
             if g_val < min_cost:
                 min_pred = pred
                 min_cost = g_val
