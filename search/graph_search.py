@@ -439,7 +439,13 @@ class ADStar(object):
         if self.v[state] != self.g[state]:
             if state not in self.closed_list: # If not closed, insert or update key in open
                 if self.open_list.contains(state):
-                    self.open_list.decrease_key(state, self.key(state))
+                    key = self.key(state)
+                    if key < self.open_list.get_priority(state):
+                        self.open_list.decrease_key(state, self.key(state))
+                    else:
+                        # Hacky increase key
+                        self.open_list.remove(state)
+                        self.open_list.put(state, key)
                 else:
                     self.open_list.put(state, self.key(state))
             elif state not in self.incons_list:
@@ -453,6 +459,31 @@ class ADStar(object):
     def compute_path(self, epsilon):
 
         self.epsilon = epsilon
+
+
+
+        # Move all INCONS to Open
+        # Update priorities for all s in open
+        # set closed to empty
+
+        # TODO: make this less hacky
+        # copying over dict of everything in open list
+        # and reinserting with new priority
+        open_list_dict = copy.deepcopy(self.open_list.heap_dict)
+        self.open_list = OpenList()
+
+        for state, _ in open_list_dict.iteritems():
+            self.open_list.put(state, self.key(state))
+
+        # Move states from INCOS to Open
+        for s in self.incons_list:
+            self.open_list.put(s, self.key(s))
+        self.incons_list = set()
+
+        self.closed_list = set()
+
+
+
         while True:
             if self.open_list.empty():
                 break # No path exists
@@ -477,7 +508,6 @@ class ADStar(object):
                         self.g[successor] = self.g[s] + cost
                         self.update_set_membership(successor)
             else: # Propagating underconsistency
-                print 'derpy derpy derp'
                 self.v[s] = float('inf')
                 self.update_set_membership(s)
                 for successor, cost in zip(*self.graph.get_successors(s)):
@@ -494,8 +524,7 @@ class ADStar(object):
         curr_node = self.goal
         while (curr_node is not None):
             path.append(curr_node)
-            curr_node = self.bp[curr_node]
-
+            curr_node = self.bp.get(curr_node, None)
         path.reverse()
         nodes_expanded = 0
         return True, path, self.g[self.goal], nodes_expanded
