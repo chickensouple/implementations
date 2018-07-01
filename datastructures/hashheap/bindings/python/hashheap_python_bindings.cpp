@@ -2,8 +2,6 @@
 #include <pybind11/pybind11.h>
 #include <stdexcept>
 
-#include <Python.h>
-
 namespace py = pybind11;
 
 
@@ -11,10 +9,9 @@ struct PyObjectHash {
     size_t operator()(const py::object& p) const {return py::hash(p);};
 };
 
+
 struct PyObjectEqual {
     bool operator()(const py::object& lhs, const py::object& rhs) const {
-
-
         int res = PyObject_RichCompareBool(lhs.ptr(), rhs.ptr(), Py_EQ);
 
         if (res == -1) {
@@ -25,7 +22,19 @@ struct PyObjectEqual {
     };
 };
 
-typedef HashHeap<py::object, int, std::less<int>, PyObjectHash, PyObjectEqual> HashHeapPyObj;
+struct PyObjectLess {
+    bool operator()(const py::object& lhs, const py::object& rhs) const {
+        int res = PyObject_RichCompareBool(lhs.ptr(), rhs.ptr(), Py_LT);
+
+        if (res == -1) {
+            throw std::runtime_error("Comparison not valid.");
+        }
+
+        return (bool)res;
+    }
+};
+
+typedef HashHeap<py::object, py::object, PyObjectLess, PyObjectHash, PyObjectEqual> HashHeapPyObj;
 
 
 PYBIND11_MODULE(HashHeap, module) {
