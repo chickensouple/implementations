@@ -137,7 +137,6 @@ class MonteCarloTreeSearch(object):
             new_visit = old_visit + 1
             self.tree.update_node_info(tree_idx, (old_game_state, new_value, new_visit, old_action))
             tree_idx = self.tree.c_p_edges[tree_idx]
-
         self.N += 1
 
     def rollout(self, tree_idx, curr_player):
@@ -187,7 +186,7 @@ if __name__ == '__main__':
 
         if ttt.get_winner() != None:
             break
-            
+
         # opponent move
         curr_state = ttt.get_state()
         action, val = mcts.search(curr_state, 2000)

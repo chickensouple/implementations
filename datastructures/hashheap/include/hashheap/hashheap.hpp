@@ -1,3 +1,6 @@
+#ifndef _HASH_HEAP_HPP_
+#define _HASH_HEAP_HPP_
+
 #include <vector>
 #include <unordered_map>
 #include <utility>
@@ -5,9 +8,16 @@
 #include <iostream>
 #include <stdexcept>
 
-// Min Binary Heap with HashMap for fast update_priority() and remove() operations
 
-template <class T, class P, class Comp = std::less<P>>
+/**
+ * @brief Datastructure that is a combination of a Min Binary Heap and a Hash Map
+ * for fast update_priority() and remove() operations
+ *
+ * @tparam T type of object to insert into hashheap
+ * @tparam P type of priority of objects. defines how objects get compared
+ * @tparam Comp = std::less<P> Comparison function that compares two objects of type P to decide which one is less
+ */
+template <class T, class P, class Comp=std::less<P>, class Hash=std::hash<T>, class KeyEqual=std::equal_to<T>>
 class HashHeap {
 public:
     HashHeap();
@@ -24,7 +34,7 @@ public:
 
 private:
     std::vector<std::pair<T, P>> _heap;
-    std::unordered_map<T, size_t> _map;
+    std::unordered_map<T, size_t, Hash, KeyEqual> _map;
     Comp _comp;
 
     void _swap(size_t idx1, size_t idx2);
@@ -32,7 +42,7 @@ private:
     /**
      * @brief moves the object at an index up the tree (towards the begining of the heap)
      * until it is less than its children
-     * 
+     *
      * @param idx index of object to sift up
      */
     void _sift_up(size_t idx);
@@ -40,52 +50,57 @@ private:
     /**
      * @brief moves the object at an index down the tree (towards the end of the heap)
      * until it is greater than or equal to its parent
-     * 
+     *
      * @param idx index of object to sift down
      */
     void _sift_down(size_t idx);
 };
 
 
-template <class T, class P, class Comp>
-HashHeap<T, P, Comp>::HashHeap() : _comp(Comp()) {}
+template <class T, class P, class Comp, class Hash, class KeyEqual>
+HashHeap<T, P, Comp, Hash, KeyEqual>::HashHeap() : _comp(Comp()) {}
 
-template <class T, class P, class Comp>
-HashHeap<T, P, Comp>::~HashHeap() {}
+template <class T, class P, class Comp, class Hash, class KeyEqual>
+HashHeap<T, P, Comp, Hash, KeyEqual>::~HashHeap() {}
 
-template <class T, class P, class Comp>
-void HashHeap<T, P, Comp>::push(const T& obj, const P& priority) {
+template <class T, class P, class Comp, class Hash, class KeyEqual>
+void HashHeap<T, P, Comp, Hash, KeyEqual>::push(const T& obj, const P& priority) {
+    auto search = _map.find(obj);
+    if (search != _map.end()) {
+        throw std::runtime_error("Key already exists!");
+    }
+
     _heap.push_back(std::make_pair(obj, priority));
     _map[obj] = _heap.size() - 1;
 
     _sift_up(_heap.size() - 1);
 }
 
-template <class T, class P, class Comp>
-T HashHeap<T, P, Comp>::pop() {
+template <class T, class P, class Comp, class Hash, class KeyEqual>
+T HashHeap<T, P, Comp, Hash, KeyEqual>::pop() {
     auto pair = _heap[0];
     _swap(0, _heap.size()-1);
 
     _heap.pop_back();
     _map.erase(pair.first);
-    
+
     _sift_down(0);
     return pair.first;
 }
 
-template <class T, class P, class Comp>
-size_t HashHeap<T, P, Comp>::size() const {
+template <class T, class P, class Comp, class Hash, class KeyEqual>
+size_t HashHeap<T, P, Comp, Hash, KeyEqual>::size() const {
     return _heap.size();
 }
 
 
-template <class T, class P, class Comp>
-bool HashHeap<T, P, Comp>::empty() const {
+template <class T, class P, class Comp, class Hash, class KeyEqual>
+bool HashHeap<T, P, Comp, Hash, KeyEqual>::empty() const {
     return _heap.empty();
 }
 
-template <class T, class P, class Comp>
-bool HashHeap<T, P, Comp>::update_priority(const T& obj, const P& new_priority) {
+template <class T, class P, class Comp, class Hash, class KeyEqual>
+bool HashHeap<T, P, Comp, Hash, KeyEqual>::update_priority(const T& obj, const P& new_priority) {
     auto search = _map.find(obj);
     if (search == _map.end()) {
         throw std::runtime_error("No such key exists!");
@@ -104,8 +119,8 @@ bool HashHeap<T, P, Comp>::update_priority(const T& obj, const P& new_priority) 
     return true;
 }
 
-template <class T, class P, class Comp>
-bool HashHeap<T, P, Comp>::remove(const T& obj) {
+template <class T, class P, class Comp, class Hash, class KeyEqual>
+bool HashHeap<T, P, Comp, Hash, KeyEqual>::remove(const T& obj) {
     auto search = _map.find(obj);
     if (search == _map.end()) {
         throw std::runtime_error("No such key exists!");
@@ -132,8 +147,8 @@ bool HashHeap<T, P, Comp>::remove(const T& obj) {
     return true;
 }
 
-template <class T, class P, class Comp>
-void HashHeap<T, P, Comp>::debug_print() const {
+template <class T, class P, class Comp, class Hash, class KeyEqual>
+void HashHeap<T, P, Comp, Hash, KeyEqual>::debug_print() const {
     std::cout << "Heap\n";
     std::cout << "===============\n";
     std::cout << "(Obj, Priority)\n";
@@ -148,15 +163,15 @@ void HashHeap<T, P, Comp>::debug_print() const {
 
 }
 
-template <class T, class P, class Comp>
-void HashHeap<T, P, Comp>::_swap(size_t idx1, size_t idx2) {
+template <class T, class P, class Comp, class Hash, class KeyEqual>
+void HashHeap<T, P, Comp, Hash, KeyEqual>::_swap(size_t idx1, size_t idx2) {
     _map[_heap[idx1].first] = idx2;
     _map[_heap[idx2].first] = idx1;
     std::swap(_heap[idx1], _heap[idx2]);
 }
 
-template <class T, class P, class Comp>
-void HashHeap<T, P, Comp>::_sift_up(size_t idx) {
+template <class T, class P, class Comp, class Hash, class KeyEqual>
+void HashHeap<T, P, Comp, Hash, KeyEqual>::_sift_up(size_t idx) {
     // swap elements until root is reached or until it is greater or equal than parent
     size_t i = idx;
     while (i != 0) {
@@ -171,10 +186,10 @@ void HashHeap<T, P, Comp>::_sift_up(size_t idx) {
     }
 }
 
-template <class T, class P, class Comp>
-void HashHeap<T, P, Comp>::_sift_down(size_t idx) {
+template <class T, class P, class Comp, class Hash, class KeyEqual>
+void HashHeap<T, P, Comp, Hash, KeyEqual>::_sift_down(size_t idx) {
     size_t i = idx;
-    
+
     // swap elements until there are no more children in range
     // or until it is less than all children
     while (2*i + 1 < _heap.size()) {
@@ -190,7 +205,7 @@ void HashHeap<T, P, Comp>::_sift_down(size_t idx) {
             // find minimum of two children
             min_child_i = _comp(_heap[child1_i].second, _heap[child2_i].second) ? child1_i : child2_i;
         }
-  
+
         if (_comp(_heap[i].second, _heap[min_child_i].second)) {
             break;
         } else {
@@ -200,3 +215,5 @@ void HashHeap<T, P, Comp>::_sift_down(size_t idx) {
     }
 }
 
+
+#endif /* _HASH_HEAP_HPP */

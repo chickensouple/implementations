@@ -68,14 +68,14 @@ class RRT(object):
 
 
 if __name__ == '__main__':
-    import models
+    import dynamicsystems.models
     from functools import partial
     import math
-    pendulum = models.Pendulum()
+    pendulum = dynamicsystems.models.Pendulum()
 
     class PendulumFuncs(object):
         def __init__(self):
-            self.pendulum = models.Pendulum()
+            self.pendulum = dynamicsystems.models.Pendulum()
 
         def get_config(self):
             config = {'collision_check': partial(PendulumFuncs.collision_check, self),
@@ -113,12 +113,12 @@ if __name__ == '__main__':
 
             for i in range(15):
                 u = np.array([np.random.random() * 2 - 1])
-                control_func = models.ode.constant_controller(u)
+                control_func = dynamicsystems.ode.constant_controller(u)
                 
                 num_steps = np.random.randint(1, max_steps)
 
                 dts = np.ones(num_steps) * dt
-                x1, t1 = models.ode.ode_solver(self.pendulum.get_diff_eq(), control_func, np.array([closest_node]).T, 0, dts)
+                x1, t1 = dynamicsystems.ode.ode_solver(self.pendulum.get_diff_eq(), control_func, np.array([closest_node]).T, 0, dts)
                 
                 x_end = x1[:, -1]
                 dist = self.dist(np.array([x_end]), target_node)

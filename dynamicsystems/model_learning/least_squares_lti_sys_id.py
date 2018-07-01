@@ -3,10 +3,10 @@ import numpy as np
 def least_squares_lti_sys_id(x, u, x_next):
     """
     Performs Least Squares system identification on
-    Discrete Linear Time invariant systems of the form
-    
+    Discrete Linear Time Invariant systems of the form
+
     x_next = A*x + B*u
-    
+
     with state dimensions n
     control dimensions m
     and number of observations l

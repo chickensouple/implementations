@@ -14,7 +14,7 @@ from ode import ode_solver_once, ode_solver_once_adaptive
 class DDP(object):
     def __init__(self, sys):
         self.sys = sys
-        
+
     def solve(self, x0, N, dt, quad_step_cost_func, quad_final_cost_func, niter=50):
         n = len(x0)
         m = 1
@@ -27,7 +27,6 @@ class DDP(object):
         for i in range(niter):
             x_list, u_list = self._forward_pass(x_list, u_list, controller_list, dt)
             controller_list = self._backward_pass(x_list, u_list, dt, quad_step_cost_func, quad_final_cost_func)
-            
 
 
             x_arr = np.array(x_list)

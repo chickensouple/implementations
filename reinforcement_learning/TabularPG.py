@@ -92,3 +92,7 @@ if __name__ == '__main__':
 	policy_grad = TabularPG(state_len, num_actions, alpha=0.1, temperature=1.5)
 
 	single_test(env, policy_grad, get_state, 20000)
+
+
+
+

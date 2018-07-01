@@ -72,6 +72,7 @@ class Pendulum(ModelBase):
 
 
 if __name__ == '__main__':
+
     import matplotlib.pyplot as plt
 
     env = Pendulum()
@@ -84,6 +85,10 @@ if __name__ == '__main__':
 
     plt.scatter(states[0, :], states[1, :])
     plt.show()
+
+
+
+
 
 
 
